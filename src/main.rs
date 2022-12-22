@@ -1,3 +1,6 @@
+use gbemu_rs::Emulator;
+
 fn main() {
-    println!("Hello, world!");
+    let mut e = Emulator::new();
+    e.start();
 }
