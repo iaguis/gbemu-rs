@@ -7,53 +7,109 @@ use registers::Registers;
 
 pub struct Emulator {
     cpu: Cpu,
-    counter: u8,
 }
 
 struct Cpu {
-    reg: Registers
+    reg: Registers,
+    counter: u8,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum Opcode {
+    Nop,
+    Ld16Rr,
+}
+
+impl From<u8> for Opcode {
+    fn from(value: u8) -> Self {
+        match value {
+            0x00 => Opcode::Nop,
+            0x01 => Opcode::Ld16Rr,
+            _ => Opcode::Nop,
+        }
+    }
+}
+
+impl Cpu {
+    pub fn new() -> Cpu {
+        Cpu {
+            reg: Registers::new(),
+            counter: 0,
+        }
+    }
+
+    fn read_byte(&self, address: usize) -> u8 {
+        let code: [u8; 16] = [0x01, 0xaa, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+        assert!(address < code.len());
+
+        code[address]
+    }
+
+    fn write_byte(&mut self, address: u16, val: u8) -> Result<(), &'static str> {
+        Ok(())
+    }
+
+    fn fetch_byte(&mut self) -> Opcode {
+        let b = self.read_byte(self.reg.pc.into());
+        self.reg.pc += 1;
+        println!("mem[pc] = {}", b);
+
+        Opcode::from(b)
+    }
+
+    fn execute(&mut self) {
+        let opcode = self.fetch_byte();
+
+        println!("opcode: {:?}", opcode);
+        match opcode {
+            Opcode::Nop => {
+                println!("nop, sleeping 1s");
+                thread::sleep(time::Duration::from_secs(1));
+            },
+            Opcode::Ld16Rr => {
+                println!("Executing Ld16Rr");
+                self.reg.b = self.read_byte(self.reg.pc.into()) as u8;
+                self.reg.pc += 1;
+                self.reg.c = self.read_byte(self.reg.pc.into()) as u8;
+                self.reg.pc += 1;
+
+                println!("BC = {}", self.reg.bc());
+                println!("B = {}", self.reg.b);
+                println!("C = {}", self.reg.c);
+
+                thread::sleep(time::Duration::from_secs(1));
+            },
+        };
+    }
+
+    fn run(&mut self) {
+        loop {
+            println!("emulating...");
+
+            self.execute();
+
+            if self.counter <= 0 {
+                // TODO run tasks
+                self.counter += 10; // XXX interrupt period
+            }
+        }
+    }
 }
 
 impl Emulator {
     pub fn new() -> Emulator {
         Emulator {
-            cpu: Cpu {
-                reg: Registers::new()
-            },
-            counter: 0,
+            cpu: Cpu::new()
         }
-    }
-
-    fn read_word(&self, address: u16) -> u8 {
-        0
-    }
-
-    fn write_word(&mut self, address: u16, val: u8) -> Result<(), &'static str> {
-        Ok(())
     }
 
     fn get_cycles(&self, opcode: u8) -> u8 {
         0
     }
 
-    fn execute(&self, opcode: u8) {
-    }
-
     pub fn start(&mut self) {
-        loop {
-            println!("emulating...");
-
-            let opcode = self.read_byte(self.cpu.reg.pc);
-            self.counter -= self.get_cycles(opcode);
-
-            self.execute(opcode);
-
-            if self.counter <= 0 {
-                // TODO run tasks
-                self.counter += 10; // XXX interrupt period
-            }
-
-            thread::sleep(time::Duration::from_secs(5));
-        }
+        self.cpu.run()
     }
 }
