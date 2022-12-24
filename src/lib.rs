@@ -72,7 +72,7 @@ impl Cpu {
     fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
         let b = self.read_byte(self.reg.pc.into());
         self.reg.pc += 1;
-        println!("mem[pc] = {}", b);
+        println!("mem[pc] = {:#04x}", b);
 
         let opcode = Opcode::try_from(b)?;
         Ok(opcode)
