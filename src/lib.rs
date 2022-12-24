@@ -21,12 +21,14 @@ pub enum Opcode {
     Ld16Rr,
 }
 
-impl From<u8> for Opcode {
-    fn from(value: u8) -> Self {
+impl TryFrom<u8> for Opcode {
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            0x00 => Opcode::Nop,
-            0x01 => Opcode::Ld16Rr,
-            _ => Opcode::Nop,
+            0x00 => Ok(Opcode::Nop),
+            0x01 => Ok(Opcode::Ld16Rr),
+            _ => Err("unknown opcode"),
         }
     }
 }
@@ -51,16 +53,18 @@ impl Cpu {
         Ok(())
     }
 
-    fn fetch_byte(&mut self) -> Opcode {
+    fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
         let b = self.read_byte(self.reg.pc.into());
         self.reg.pc += 1;
         println!("mem[pc] = {}", b);
 
-        Opcode::from(b)
+        let opcode = Opcode::try_from(b)?;
+        Ok(opcode)
     }
 
     fn execute(&mut self) {
-        let opcode = self.fetch_byte();
+        // XXX this panics if it fails to decode the opcode, which is probably fine
+        let opcode = self.fetch_byte().expect("failed fetching");
 
         println!("opcode: {:?}", opcode);
         match opcode {
