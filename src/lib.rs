@@ -1,9 +1,12 @@
 use std::thread;
 use std::time;
+use std::fs::File;
 
 mod registers;
+mod memory;
 
 use registers::Registers;
+use memory::Memory;
 
 pub struct Emulator {
     cpu: Cpu,
@@ -12,6 +15,7 @@ pub struct Emulator {
 struct Cpu {
     reg: Registers,
     counter: u8,
+    memory: Memory,
 }
 
 #[repr(u8)]
@@ -35,18 +39,30 @@ impl TryFrom<u8> for Opcode {
 
 impl Cpu {
     pub fn new() -> Cpu {
-        Cpu {
+        let mut cpu = Cpu {
             reg: Registers::new(),
             counter: 0,
-        }
+            memory: Memory::new(),
+        };
+
+        // TODO error handling
+
+        // FIXME pass this from main
+        let mut f = File::open("/home/iaguis/programming/gameboy/cpu_instrs/cpu_instrs.gb").expect("can't open ROM");
+        cpu.memory.read_rom(f).expect("can't read ROM");
+
+        cpu
     }
 
     fn read_byte(&self, address: usize) -> u8 {
-        let code: [u8; 16] = [0x01, 0xaa, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+        assert!(address < self.memory.rom_0.len() * 2);
 
-        assert!(address < code.len());
-
-        code[address]
+        match address {
+            0..=0x3FFE => self.memory.rom_0[address],
+            0x3FFF..=0x7FFE => self.memory.rom_n[address-0x3FFF],
+            // FIXME
+            _ => 0,
+        }
     }
 
     fn write_byte(&mut self, address: u16, val: u8) -> Result<(), &'static str> {
