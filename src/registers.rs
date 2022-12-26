@@ -48,6 +48,99 @@ impl Registers {
     pub fn hl(&self) -> u16 {
         ((self.h as u16) << 8) | (self.l as u16)
     }
+
+    pub fn get_flag_c(&self) -> bool {
+        return (self.f & 0b00001000) != 0;
+    }
+
+    pub fn set_flag_c(&mut self, val: bool) {
+        if val {
+            self.f |= 0b00001000;
+        } else {
+            self.f &= 0b11110111;
+        }
+    }
+
+    pub fn set_flag_z(&mut self, val: bool) {
+        if val {
+            self.f |= 0b10000000;
+        } else {
+            self.f &= 0b01111111;
+        }
+    }
+
+    pub fn set_flag_n(&mut self, val: bool) {
+        if val {
+            self.f |= 0b01000000;
+        } else {
+            self.f &= 0b10111111;
+        }
+    }
+
+    pub fn set_flag_h(&mut self, val: bool) {
+        if val {
+            self.f |= 0b00100000;
+        } else {
+            self.f &= 0b11011111;
+        }
+    }
+
+    pub fn alu_add(&mut self, b: u8) {
+        let a = self.a;
+        let c = self.get_flag_c() as u8;
+        let r = a.wrapping_add(b).wrapping_add(c);
+
+        self.set_flag_z(r == 0);
+        self.set_flag_n(false);
+        // half carry
+        self.set_flag_h((a & 0xF) + (b & 0xF) + c > 0xF);
+        self.set_flag_c((a as u16) + (b as u16) + (c as u16) > 0xFF);
+        self.a = r;
+    }
+
+    fn alu_inc(&mut self, a: u8) -> u8 {
+        let r = a.wrapping_add(1);
+        self.set_flag_z(r == 0);
+        self.set_flag_n(false);
+        self.set_flag_h((a & 0xf) + 1 > 0xF);
+
+        r
+    }
+
+    fn alu_dec(&mut self, a: u8) -> u8 {
+        let r = a.wrapping_sub(1);
+        self.set_flag_z(r == 0);
+        self.set_flag_n(false);
+        self.set_flag_h((a & 0xf) == 0);
+
+        r
+    }
+
+    // FIXME generalize to other registers?
+    pub fn inc_b(&mut self) {
+        self.b = self.alu_inc(self.b);
+    }
+
+    pub fn dec_b(&mut self) {
+        self.b = self.alu_dec(self.b);
+    }
+
+    pub fn inc_bc(&mut self) {
+        // FIXME this is wrong
+        self.c += 1;
+        if self.c == 0 {
+            self.b += 1;
+        }
+
+        self.set_flag_z(false);
+        if self.bc() == 0 {
+            self.set_flag_z(true);
+        }
+
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        // TODO if carry_per_bit[3] set_flag_h(true)
+    }
 }
 
 #[cfg(test)]
