@@ -23,6 +23,10 @@ struct Cpu {
 pub enum Opcode {
     Nop,
     Ld16Rr,
+    Ld16AI,
+    Inc16,
+    Inc8,
+    Dec8,
 }
 
 impl TryFrom<u8> for Opcode {
@@ -32,6 +36,10 @@ impl TryFrom<u8> for Opcode {
         match value {
             0x00 => Ok(Opcode::Nop),
             0x01 => Ok(Opcode::Ld16Rr),
+            0x02 => Ok(Opcode::Ld16AI),
+            0x03 => Ok(Opcode::Inc16),
+            0x04 => Ok(Opcode::Inc8),
+            0x05 => Ok(Opcode::Dec8),
             _ => Err("unknown opcode"),
         }
     }
@@ -100,6 +108,31 @@ impl Cpu {
                 println!("C = {}", self.reg.c);
 
                 thread::sleep(time::Duration::from_secs(1));
+            },
+            Opcode::Ld16AI => {
+                println!("Executing Ld16AI");
+
+                // TODO check
+                self.reg.b = 0;
+                self.reg.c = self.reg.a;
+
+                println!("BC = {}", self.reg.bc());
+                println!("B = {}", self.reg.b);
+                println!("C = {}", self.reg.c);
+
+                thread::sleep(time::Duration::from_secs(1));
+            },
+            Opcode::Inc16 => {
+                self.reg.inc_bc();
+                println!("Executing Inc16");
+            },
+            Opcode::Inc8 => {
+                self.reg.inc_b();
+                println!("Executing Inc8");
+            },
+            Opcode::Dec8 => {
+                self.reg.dec_b();
+                println!("Executing Dec8");
             },
         };
     }
