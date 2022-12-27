@@ -14,7 +14,7 @@ pub struct Emulator {
 
 struct Cpu {
     reg: Registers,
-    counter: u8,
+    counter: i32,
     memory: Memory,
 }
 
