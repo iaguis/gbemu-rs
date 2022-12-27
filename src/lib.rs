@@ -27,6 +27,7 @@ pub enum Opcode {
     Inc16,
     Inc8,
     Dec8,
+    Jp = 0xc3,
 }
 
 impl TryFrom<u8> for Opcode {
@@ -40,6 +41,7 @@ impl TryFrom<u8> for Opcode {
             0x03 => Ok(Opcode::Inc16),
             0x04 => Ok(Opcode::Inc8),
             0x05 => Ok(Opcode::Dec8),
+            0xc3 => Ok(Opcode::Jp),
             _ => Err("unknown opcode"),
         }
     }
@@ -141,6 +143,19 @@ impl Cpu {
 
                 1
             },
+            Opcode::Jp => {
+                let address_lo = self.read_byte(self.reg.pc.into()) as u16;
+                self.reg.pc += 1;
+                let address_hi = (self.read_byte(self.reg.pc.into()) as u16) << 8;
+                self.reg.pc += 1;
+                let address = address_hi | address_lo;
+
+                println!("Executing Jp to {:#04x}", address);
+
+                self.reg.pc = address;
+
+                4
+            }
         };
 
         println!("{} cycles", cycles);
