@@ -49,7 +49,7 @@ impl Cpu {
     pub fn new() -> Cpu {
         let mut cpu = Cpu {
             reg: Registers::new(),
-            counter: 0,
+            counter: 20,
             memory: Memory::new(),
         };
 
@@ -87,15 +87,15 @@ impl Cpu {
         Ok(opcode)
     }
 
-    fn execute(&mut self) {
+    fn execute(&mut self) -> u8 {
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
 
         println!("opcode: {:?}", opcode);
-        match opcode {
+        let cycles = match opcode {
             Opcode::Nop => {
                 println!("nop, sleeping 1s");
-                thread::sleep(time::Duration::from_secs(1));
+                1
             },
             Opcode::Ld16Rr => {
                 println!("Executing Ld16Rr");
@@ -108,7 +108,7 @@ impl Cpu {
                 println!("B = {}", self.reg.b);
                 println!("C = {}", self.reg.c);
 
-                thread::sleep(time::Duration::from_secs(1));
+                3
             },
             Opcode::Ld16AI => {
                 println!("Executing Ld16AI");
@@ -121,32 +121,45 @@ impl Cpu {
                 println!("B = {}", self.reg.b);
                 println!("C = {}", self.reg.c);
 
-                thread::sleep(time::Duration::from_secs(1));
+                1
             },
             Opcode::Inc16 => {
                 self.reg.inc_bc();
                 println!("Executing Inc16");
+
+                1
             },
             Opcode::Inc8 => {
                 self.reg.inc_b();
                 println!("Executing Inc8");
+
+                1
             },
             Opcode::Dec8 => {
                 self.reg.dec_b();
                 println!("Executing Dec8");
+
+                1
             },
         };
+
+        println!("{} cycles", cycles);
+        cycles
     }
 
     fn run(&mut self) {
         loop {
             println!("emulating...");
 
-            self.execute();
+            let cycles = self.execute();
+
+            self.counter -= cycles as i32;
+            println!("self.counter = {}", cycles);
 
             if self.counter <= 0 {
                 // TODO run tasks
-                self.counter += 10; // XXX interrupt period
+                println!("running interrupts");
+                self.counter += 20; // XXX interrupt period
             }
         }
     }
