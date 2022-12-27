@@ -12,7 +12,7 @@ pub struct Registers {
     pub pc: u16,
 
     pub m: u8,
-    pub ticks: u8,
+    pub ticks: u32,
 }
 
 pub enum Flag {
