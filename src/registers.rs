@@ -15,6 +15,13 @@ pub struct Registers {
     pub t: u8,
 }
 
+pub enum Flag {
+    C = 4,
+    H,
+    N,
+    Z,
+}
+
 impl Registers {
     pub fn new() -> Registers {
         // https://raw.githubusercontent.com/AntonioND/giibiiadvance/master/docs/TCAGBD.pdf page 10
@@ -50,69 +57,45 @@ impl Registers {
         ((self.h as u16) << 8) | (self.l as u16)
     }
 
-    pub fn get_flag_c(&self) -> bool {
-        return (self.f & 0b00001000) != 0;
+    pub fn get_flag(&self, flag: Flag) -> bool {
+        return (self.f & (0b00000001 << (flag as u8))) != 0;
     }
 
-    pub fn set_flag_c(&mut self, val: bool) {
+    pub fn set_flag(&mut self, flag: Flag, val: bool) {
         if val {
-            self.f |= 0b00001000;
+            self.f |= (0b00000001 << (flag as u8))
         } else {
-            self.f &= 0b11110111;
-        }
-    }
-
-    pub fn set_flag_z(&mut self, val: bool) {
-        if val {
-            self.f |= 0b10000000;
-        } else {
-            self.f &= 0b01111111;
-        }
-    }
-
-    pub fn set_flag_n(&mut self, val: bool) {
-        if val {
-            self.f |= 0b01000000;
-        } else {
-            self.f &= 0b10111111;
-        }
-    }
-
-    pub fn set_flag_h(&mut self, val: bool) {
-        if val {
-            self.f |= 0b00100000;
-        } else {
-            self.f &= 0b11011111;
+            self.f &= !(0b00000001 << (flag as u8))
         }
     }
 
     pub fn alu_add(&mut self, b: u8) {
         let a = self.a;
-        let c = self.get_flag_c() as u8;
+        let c = self.get_flag(Flag::C) as u8;
         let r = a.wrapping_add(b).wrapping_add(c);
 
-        self.set_flag_z(r == 0);
-        self.set_flag_n(false);
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
         // half carry
-        self.set_flag_h((a & 0xF) + (b & 0xF) + c > 0xF);
-        self.set_flag_c((a as u16) + (b as u16) + (c as u16) > 0xFF);
+        self.set_flag(Flag::H, (a & 0xF) + (b & 0xF) + c > 0xF);
+        self.set_flag(Flag::C, (a as u16) + (b as u16) + (c as u16) > 0xFF);
         self.a = r;
     }
 
     fn alu_inc(&mut self, a: u8) -> u8 {
         let r = a.wrapping_add(1);
-        self.set_flag_z(r == 0);
-        self.set_flag_n(false);
-        self.set_flag_h((a & 0xf) + 1 > 0xF);
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, (a & 0xf) + 1 > 0xF);
 
         r
     }
 
     fn alu_dec(&mut self, a: u8) -> u8 {
         let r = a.wrapping_sub(1);
-        self.set_flag_z(r == 0);
-        self.set_flag_n(false);
-        self.set_flag_h((a & 0xf) == 0);
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, (a & 0xf) == 0);
 
         r
     }
@@ -133,14 +116,14 @@ impl Registers {
             self.b += 1;
         }
 
-        self.set_flag_z(false);
+        self.set_flag(Flag::Z, false);
         if self.bc() == 0 {
-            self.set_flag_z(true);
+            self.set_flag(Flag::Z, true);
         }
 
-        self.set_flag_n(false);
-        self.set_flag_h(false);
-        // TODO if carry_per_bit[3] set_flag_h(true)
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, false);
+        // TODO if carry_per_bit[3] set_flag(Flag::H, true)
     }
 }
 
