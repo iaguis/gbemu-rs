@@ -17,16 +17,17 @@ pub struct Registers {
 
 impl Registers {
     pub fn new() -> Registers {
+        // https://raw.githubusercontent.com/AntonioND/giibiiadvance/master/docs/TCAGBD.pdf page 10
         Registers {
-            a: 0,
+            a: 0x01,
             b: 0,
-            c: 0,
+            c: 0x13,
             d: 0,
-            e: 0,
-            f: 0,
-            h: 0,
-            l: 0,
-            sp: 0,
+            e: 0xd8,
+            f: 0xb0,
+            h: 0x1,
+            l: 0x4d,
+            sp: 0xfffe,
             pc: 0x100,
             m: 0,
             t: 0,
