@@ -98,9 +98,9 @@ impl Cpu {
             },
             Opcode::Ld16Rr => {
                 println!("Executing Ld16Rr");
-                self.reg.b = self.read_byte(self.reg.pc.into()) as u8;
+                self.reg.b = self.read_byte(self.reg.pc.into());
                 self.reg.pc += 1;
-                self.reg.c = self.read_byte(self.reg.pc.into()) as u8;
+                self.reg.c = self.read_byte(self.reg.pc.into());
                 self.reg.pc += 1;
 
                 println!("BC = {}", self.reg.bc());
