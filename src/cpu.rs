@@ -10,6 +10,7 @@ pub struct CPU {
     pub memory_bus: MemoryBus,
     pub counter: i32,
     pub tmp_buffer: Vec<u8>,
+    IME: bool,
 }
 
 #[repr(u8)]
@@ -21,6 +22,17 @@ pub enum Opcode {
     DEC(IncTarget),
     PUSH(StackTarget),
     POP(StackTarget),
+    JP(JPCondition),
+    DI,
+}
+
+#[derive(Debug)]
+pub enum JPCondition {
+    Nothing,
+    NZ,
+    NC,
+    Z,
+    C,
 }
 
 #[derive(Debug)]
@@ -115,6 +127,8 @@ impl TryFrom<u8> for Opcode {
             0x04 => Ok(Opcode::INC(IncTarget::B)),
             0x05 => Ok(Opcode::DEC(IncTarget::B)),
             0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
+            0xc3 => Ok(Opcode::JP(JPCondition::Nothing)),
+            0xf3 => Ok(Opcode::DI),
             _ => Err("unknown opcode"),
         }
     }
@@ -128,6 +142,7 @@ impl CPU {
             memory_bus: MemoryBus::new(),
             // TODO remove
             tmp_buffer: vec![1; 100],
+            IME: true,
         };
 
         // TODO error handling
@@ -280,6 +295,28 @@ impl CPU {
                     },
                 }
                 cycles = 1;
+                self.reg.pc += 1;
+            },
+
+            Opcode::JP(condition) => {
+                match condition {
+                    JPCondition::Nothing => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                        let jp_address = ((msb as u16) << 8) | (lsb as u16);
+
+                        cycles = 4;
+                        self.reg.pc = jp_address;
+                    },
+                    _ => {
+                        panic!("not implemented");
+                    },
+                }
+            },
+
+            Opcode::DI => {
+                self.IME = false;
                 self.reg.pc += 1;
             },
             _ => { panic!("not implemented"); },
