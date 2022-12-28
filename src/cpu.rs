@@ -15,14 +15,92 @@ pub struct CPU {
 #[repr(u8)]
 #[derive(Debug)]
 pub enum Opcode {
-    Nop,
-    Ld16Rr,
-    Ld16AI,
-    Inc16,
-    Inc8,
-    Dec8,
-    Ld8I,
-    Jp = 0xc3,
+    NOP,
+    LD(LDType),
+    INC(IncTarget),
+    DEC(IncTarget),
+    PUSH(StackTarget),
+    POP(StackTarget),
+}
+
+#[derive(Debug)]
+pub enum LDType {
+    Byte(LDTarget, LDSource),
+    Word(LDWordTarget),
+    AFromIndirect(Indirect),
+    IndirectFromA(Indirect),
+    AFromAddress,
+    AddressFromA,
+    SPFromHL,
+    IndirectFromSP,
+}
+
+#[derive(Debug)]
+pub enum IncTarget {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    BC,
+    DE,
+    HL,
+    SP,
+    HLIndirect,
+}
+
+#[derive(Debug)]
+pub enum Indirect {
+    BCIndirect,
+    DEIndirect,
+    HLIndirectInc,
+    HLIndirectDec,
+    LastByteIndirect,
+}
+
+#[derive(Debug)]
+pub enum StackTarget {
+    AF,
+    BC,
+    DE,
+    HL,
+}
+
+#[derive(Debug)]
+pub enum LDWordTarget {
+    BC,
+    DE,
+    HL,
+    SP,
+}
+
+#[derive(Debug)]
+pub enum LDSource {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L,
+    D8,
+    HLIndirect,
+}
+
+#[derive(Debug)]
+pub enum LDTarget {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L,
+    HLIndirect,
 }
 
 impl TryFrom<u8> for Opcode {
@@ -30,14 +108,13 @@ impl TryFrom<u8> for Opcode {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            0x00 => Ok(Opcode::Nop),
-            0x01 => Ok(Opcode::Ld16Rr),
-            0x02 => Ok(Opcode::Ld16AI),
-            0x03 => Ok(Opcode::Inc16),
-            0x04 => Ok(Opcode::Inc8),
-            0x05 => Ok(Opcode::Dec8),
-            0x06 => Ok(Opcode::Ld8I),
-            0xc3 => Ok(Opcode::Jp),
+            0x00 => Ok(Opcode::NOP),
+            0x01 => Ok(Opcode::LD(LDType::Word(LDWordTarget::BC))),
+            0x02 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::BCIndirect))),
+            0x03 => Ok(Opcode::INC(IncTarget::BC)),
+            0x04 => Ok(Opcode::INC(IncTarget::B)),
+            0x05 => Ok(Opcode::DEC(IncTarget::B)),
+            0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
             _ => Err("unknown opcode"),
         }
     }
@@ -65,7 +142,6 @@ impl CPU {
     fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
         println!("pc = {:#04x}", self.reg.pc);
         let b = self.memory_bus.read_byte(self.reg.pc.into());
-        self.reg.pc += 1;
         println!("mem[pc] = {:#04x}", b);
 
         let opcode = Opcode::try_from(b)?;
@@ -76,75 +152,137 @@ impl CPU {
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
 
+        let mut cycles = 1;
+
         println!("opcode: {:?}", opcode);
-        let cycles = match opcode {
-            Opcode::Nop => {
+        match opcode {
+            Opcode::NOP => {
                 println!("nop, sleeping 1s");
-                1
-            },
-            Opcode::Ld16Rr => {
-                println!("Executing Ld16Rr");
-                self.reg.b = self.memory_bus.read_byte(self.reg.pc.into());
+                cycles = 1;
                 self.reg.pc += 1;
-                self.reg.c = self.memory_bus.read_byte(self.reg.pc.into());
+            },
+
+            Opcode::LD(ld_type) => {
+                match ld_type {
+                    LDType::Byte(target, source) => {
+                        let source_val = match source {
+                            LDSource::A => self.reg.a,
+                            LDSource::B => self.reg.b,
+                            LDSource::C => self.reg.c,
+                            LDSource::D => self.reg.d,
+                            LDSource::E => self.reg.e,
+                            LDSource::F => self.reg.f,
+                            LDSource::H => self.reg.h,
+                            LDSource::L => self.reg.l,
+                            LDSource::D8 => self.memory_bus.read_byte(self.reg.pc + 1),
+                            LDSource::HLIndirect => self.memory_bus.read_byte(self.reg.hl()),
+                        };
+                        match target {
+                            LDTarget::A => self.reg.a = source_val,
+                            LDTarget::B => self.reg.b = source_val,
+                            LDTarget::C => self.reg.c = source_val,
+                            LDTarget::D => self.reg.d = source_val,
+                            LDTarget::E => self.reg.e = source_val,
+                            LDTarget::F => self.reg.f = source_val,
+                            LDTarget::H => self.reg.h = source_val,
+                            LDTarget::L => self.reg.l = source_val,
+                            LDTarget::HLIndirect => {
+                                self.memory_bus.write_byte(self.reg.hl(), source_val)
+                            }
+                        }
+
+                        match source {
+                            LDSource::D8 => {cycles = 2; self.reg.pc += 2},
+                            LDSource::HLIndirect => {cycles = 1; self.reg.pc += 2 },
+                            _ => {cycles = 1; self.reg.pc += 1}
+                        }
+                    },
+                    LDType::Word(ld_word_target) => {
+                        // little-endian
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                        match ld_word_target {
+                            LDWordTarget::BC => {
+                                self.reg.b = msb;
+                                self.reg.c = lsb;
+                            },
+                            LDWordTarget::DE => {
+                                self.reg.d = msb;
+                                self.reg.e = lsb;
+                            },
+                            LDWordTarget::HL => {
+                                self.reg.h = msb;
+                                self.reg.l = lsb;
+                            },
+                            LDWordTarget::SP => {
+                                self.reg.sp = ((msb as u16) << 8) | lsb as u16
+                            },
+                        }
+
+                        cycles = 3;
+                        self.reg.pc += 3;
+                    },
+                    LDType::IndirectFromA(indirect) => {
+                        let a = self.reg.a;
+
+                        match indirect {
+                            Indirect::BCIndirect => {
+                                let bc = self.reg.bc();
+                                self.memory_bus.write_byte(bc, a);
+                            }
+                            Indirect::DEIndirect => {
+                                let de = self.reg.de();
+                                self.memory_bus.write_byte(de, a);
+                            }
+                            Indirect::HLIndirectInc => {
+                                let hl = self.reg.bc();
+                                // TODO set_hl()
+                                self.memory_bus.write_byte(hl.wrapping_add(1), a);
+                            }
+                            Indirect::HLIndirectDec => {
+                                let hl = self.reg.hl();
+                                // TODO set_hl()
+                                self.memory_bus.write_byte(hl.wrapping_sub(1), a);
+                            }
+                            Indirect::LastByteIndirect => {
+                                let c = self.reg.c as u16;
+                                self.memory_bus.write_byte(0xFF00 + c, a);
+                            }
+                        }
+
+                        cycles = 2;
+                        self.reg.pc += 1;
+                    }
+                    _ => { panic!("not implemented"); }
+                }
+            },
+            Opcode::INC(target) => {
+                match target {
+                    IncTarget::A => { self.reg.a.wrapping_add(1); },
+                    IncTarget::B => { self.reg.b.wrapping_add(1); },
+                    IncTarget::C => { self.reg.c.wrapping_add(1); },
+                    IncTarget::D => { self.reg.d.wrapping_add(1); },
+                    IncTarget::E => { self.reg.e.wrapping_add(1); },
+                    IncTarget::H => { self.reg.h.wrapping_add(1); },
+                    IncTarget::L => { self.reg.l.wrapping_add(1); },
+                    IncTarget::BC => { self.reg.inc_bc(); },
+                    IncTarget::DE => {
+                        panic!("not implemented");
+                    },
+                    IncTarget::HL => {
+                        panic!("not implemented");
+                    },
+                    IncTarget::SP => {
+                        panic!("not implemented");
+                    },
+                    IncTarget::HLIndirect => {
+                        panic!("not implemented");
+                    },
+                }
+                cycles = 1;
                 self.reg.pc += 1;
-
-                println!("BC = {}", self.reg.bc());
-                println!("B = {}", self.reg.b);
-                println!("C = {}", self.reg.c);
-
-                3
             },
-            Opcode::Ld16AI => {
-                println!("Executing Ld16AI");
-
-                // TODO check
-                self.reg.b = 0;
-                self.reg.c = self.reg.a;
-
-                println!("BC = {}", self.reg.bc());
-                println!("B = {}", self.reg.b);
-                println!("C = {}", self.reg.c);
-
-                1
-            },
-            Opcode::Inc16 => {
-                self.reg.inc_bc();
-                println!("Executing Inc16");
-
-                1
-            },
-            Opcode::Inc8 => {
-                self.reg.inc_b();
-                println!("Executing Inc8");
-
-                1
-            },
-            Opcode::Dec8 => {
-                self.reg.dec_b();
-                println!("Executing Dec8");
-
-                1
-            },
-            Opcode::Jp => {
-                let address_lo = self.memory_bus.read_byte(self.reg.pc.into()) as u16;
-                self.reg.pc += 1;
-                let address_hi = (self.memory_bus.read_byte(self.reg.pc.into()) as u16) << 8;
-                self.reg.pc += 1;
-                let address = address_hi | address_lo;
-
-                println!("Executing Jp to {:#04x}", address);
-
-                self.reg.pc = address;
-
-                4
-            },
-            Opcode::Ld8I => {
-                self.reg.b = self.memory_bus.read_byte(self.reg.pc.into());
-                self.reg.pc += 1;
-
-                2
-            }
+            _ => { panic!("not implemented"); },
         };
 
         println!("{} cycles", cycles);
