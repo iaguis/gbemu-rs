@@ -21,6 +21,7 @@ pub enum Opcode {
     Inc16,
     Inc8,
     Dec8,
+    Ld8I,
     Jp = 0xc3,
 }
 
@@ -35,6 +36,7 @@ impl TryFrom<u8> for Opcode {
             0x03 => Ok(Opcode::Inc16),
             0x04 => Ok(Opcode::Inc8),
             0x05 => Ok(Opcode::Dec8),
+            0x06 => Ok(Opcode::Ld8I),
             0xc3 => Ok(Opcode::Jp),
             _ => Err("unknown opcode"),
         }
@@ -136,6 +138,12 @@ impl CPU {
                 self.reg.pc = address;
 
                 4
+            },
+            Opcode::Ld8I => {
+                self.reg.b = self.memory_bus.read_byte(self.reg.pc.into());
+                self.reg.pc += 1;
+
+                2
             }
         };
 
