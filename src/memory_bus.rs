@@ -24,6 +24,7 @@ impl MemoryBus {
         match address {
             0..=0x7FFE => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
+            0xC000..=0xDFFF => self.memory.write_byte(address, val),
             // FIXME
             _ => panic!("bad address"),
         }
@@ -34,6 +35,7 @@ impl MemoryBus {
         match address {
             0..=0x7FFE => self.memory.write_byte(address, val),
             0x8000..=0x9FFF => self.gpu.write_byte(address, val),
+            0xC000..=0xDFFF => self.memory.write_byte(address, val),
             _ => panic!("bad address"),
         }
     }
