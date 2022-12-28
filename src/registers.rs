@@ -63,7 +63,7 @@ impl Registers {
 
     pub fn set_flag(&mut self, flag: Flag, val: bool) {
         if val {
-            self.f |= (0b00000001 << (flag as u8))
+            self.f |= 0b00000001 << (flag as u8)
         } else {
             self.f &= !(0b00000001 << (flag as u8))
         }
