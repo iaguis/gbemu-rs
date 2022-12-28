@@ -1,9 +1,9 @@
-use minifb::Window;
 use std::time;
 use std::thread;
 
 mod registers;
 mod memory;
+mod memory_bus;
 mod cpu;
 mod gpu;
 

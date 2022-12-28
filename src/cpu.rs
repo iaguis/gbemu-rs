@@ -3,15 +3,12 @@ use std::time;
 use std::fs::File;
 
 use crate::registers::Registers;
-use crate::memory::Memory;
-use crate::gpu::GPU;
+use crate::memory_bus::MemoryBus;
 
 pub struct CPU {
     pub reg: Registers,
-    // XXX this doesn't make sense, the GPU is not inside the CPU :)
-    pub gpu: GPU,
+    pub memory_bus: MemoryBus,
     pub counter: i32,
-    pub memory: Memory,
     pub tmp_buffer: Vec<u8>,
 }
 
@@ -48,9 +45,8 @@ impl CPU {
     pub fn new() -> CPU {
         let mut cpu = CPU {
             reg: Registers::new(),
-            gpu: GPU::new(),
             counter: 20,
-            memory: Memory::new(),
+            memory_bus: MemoryBus::new(),
             // TODO remove
             tmp_buffer: vec![1; 100],
         };
@@ -59,29 +55,14 @@ impl CPU {
 
         // FIXME pass this from main
         let f = File::open("/home/iaguis/programming/gameboy/cpu_instrs/cpu_instrs.gb").expect("can't open ROM");
-        cpu.memory.read_rom(f).expect("can't read ROM");
+        cpu.memory_bus.read_rom(f).expect("can't read ROM");
 
         cpu
     }
 
-    fn read_byte(&self, address: usize) -> u8 {
-        assert!(address < self.memory.rom_0.len() * 2);
-
-        match address {
-            0..=0x3FFE => self.memory.rom_0[address],
-            0x3FFF..=0x7FFE => self.memory.rom_n[address-0x3FFF],
-            // FIXME
-            _ => 0,
-        }
-    }
-
-    fn write_byte(&mut self, address: u16, val: u8) -> Result<(), &'static str> {
-        Ok(())
-    }
-
     fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
         println!("pc = {:#04x}", self.reg.pc);
-        let b = self.read_byte(self.reg.pc.into());
+        let b = self.memory_bus.read_byte(self.reg.pc.into());
         self.reg.pc += 1;
         println!("mem[pc] = {:#04x}", b);
 
@@ -101,9 +82,9 @@ impl CPU {
             },
             Opcode::Ld16Rr => {
                 println!("Executing Ld16Rr");
-                self.reg.b = self.read_byte(self.reg.pc.into());
+                self.reg.b = self.memory_bus.read_byte(self.reg.pc.into());
                 self.reg.pc += 1;
-                self.reg.c = self.read_byte(self.reg.pc.into());
+                self.reg.c = self.memory_bus.read_byte(self.reg.pc.into());
                 self.reg.pc += 1;
 
                 println!("BC = {}", self.reg.bc());
@@ -144,9 +125,9 @@ impl CPU {
                 1
             },
             Opcode::Jp => {
-                let address_lo = self.read_byte(self.reg.pc.into()) as u16;
+                let address_lo = self.memory_bus.read_byte(self.reg.pc.into()) as u16;
                 self.reg.pc += 1;
-                let address_hi = (self.read_byte(self.reg.pc.into()) as u16) << 8;
+                let address_hi = (self.memory_bus.read_byte(self.reg.pc.into()) as u16) << 8;
                 self.reg.pc += 1;
                 let address = address_hi | address_lo;
 
@@ -167,8 +148,9 @@ impl CPU {
         self.tmp_buffer.iter()
     }
 
-    fn calculate_cycles(duration: u32) -> usize {
-        (duration as f64 * 0.001) as usize
+    fn calculate_cycles(duration: u32) -> i32 {
+        // XXX this might panic
+        (duration/1000).try_into().unwrap()
     }
 
     pub fn run(&mut self, duration: u32) -> usize {
@@ -181,7 +163,7 @@ impl CPU {
             let cycles = self.execute();
 
             self.counter -= cycles as i32;
-            cycles_to_run -= cycles as usize;
+            cycles_to_run -= cycles as i32;
             println!("self.counter = {}", cycles);
 
             cycles_ran += cycles as usize;
@@ -192,6 +174,7 @@ impl CPU {
 
             if self.counter <= 0 {
                 // TODO run tasks
+                self.counter = 20;
                 println!("running interrupts");
             }
         }

@@ -28,4 +28,19 @@ impl GPU {
             canvas_buffer: [0; VIEWPORT_PIXELS],
         }
     }
+
+    pub fn read_byte(&self, address: usize) -> u8 {
+        match address {
+            0x8000..=0x9FFF => self.video_ram[address - 0x8000],
+            _ => panic!("bad address"),
+        }
+    }
+
+    pub fn write_byte(&mut self, address: usize, val: u8) {
+        match address {
+            0x8000..=0x9FFF => self.video_ram[address - 0x8000] = val,
+            _ => panic!("bad address"),
+        }
+    }
+
 }

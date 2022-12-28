@@ -20,6 +20,22 @@ impl Memory {
         }
     }
 
+    pub fn read_byte(&self, address: usize) -> u8 {
+        match address {
+            0..=0x3FFE => self.rom_0[address],
+            0x3FFF..=0x7FFE => self.rom_n[address - 0x3FFF],
+            _ => panic!("bad address"),
+        }
+    }
+
+    pub fn write_byte(&mut self, address: usize, val: u8) {
+        match address {
+            0..=0x3FFE => self.rom_0[address] = val,
+            0x3FFF..=0x7FFE => self.rom_n[address - 0x3FFF] = val,
+            _ => panic!("bad address"),
+        }
+    }
+
     pub fn read_rom(&mut self, mut f: fs::File) -> io::Result<()> {
         f.read_exact(&mut self.rom_0)?;
         f.read_exact(&mut self.rom_n)?;
