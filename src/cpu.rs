@@ -127,7 +127,9 @@ impl TryFrom<u8> for Opcode {
             0x04 => Ok(Opcode::INC(IncTarget::B)),
             0x05 => Ok(Opcode::DEC(IncTarget::B)),
             0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
+            0x31 => Ok(Opcode::LD(LDType::Word(LDWordTarget::SP))),
             0xc3 => Ok(Opcode::JP(JPCondition::Nothing)),
+            0xea => Ok(Opcode::LD(LDType::AddressFromA)),
             0xf3 => Ok(Opcode::DI),
             _ => Err("unknown opcode"),
         }
@@ -267,10 +269,23 @@ impl CPU {
 
                         cycles = 2;
                         self.reg.pc += 1;
-                    }
+                    },
+                    LDType::AddressFromA => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                        let address = ((msb as u16) << 8) | lsb as u16;
+
+                        println!("address {:#04x}", address);
+
+                        self.memory_bus.write_byte(address, self.reg.a);
+
+                        cycles = 4;
+                        self.reg.pc += 3;
+                    },
                     _ => { panic!("not implemented"); }
                 }
             },
+
             Opcode::INC(target) => {
                 match target {
                     IncTarget::A => { self.reg.a.wrapping_add(1); },
