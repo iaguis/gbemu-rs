@@ -235,13 +235,13 @@ impl CPU {
                                 self.memory_bus.write_byte(de, a);
                             }
                             Indirect::HLIndirectInc => {
-                                let hl = self.reg.bc();
-                                // TODO set_hl()
-                                self.memory_bus.write_byte(hl.wrapping_add(1), a);
+                                let hl = self.reg.hl();
+                                self.reg.set_hl(hl.wrapping_add(1));
+                                self.memory_bus.write_byte(hl, a);
                             }
                             Indirect::HLIndirectDec => {
                                 let hl = self.reg.hl();
-                                // TODO set_hl()
+                                self.reg.set_hl(hl.wrapping_sub(1));
                                 self.memory_bus.write_byte(hl.wrapping_sub(1), a);
                             }
                             Indirect::LastByteIndirect => {

@@ -45,16 +45,36 @@ impl Registers {
         ((self.a as u16) << 8) | (self.f as u16)
     }
 
+    pub fn set_af(&mut self, val: u16) {
+        self.a = ((val & 0xff00) >> 8) as u8;
+        self.f = (val & 0xff) as u8;
+    }
+
     pub fn bc(&self) -> u16 {
         ((self.b as u16) << 8) | (self.c as u16)
+    }
+
+    pub fn set_bc(&mut self, val: u16) {
+        self.b = ((val & 0xff00) >> 8) as u8;
+        self.c = (val & 0xff) as u8;
     }
 
     pub fn de(&self) -> u16 {
         ((self.d as u16) << 8) | (self.e as u16)
     }
 
+    pub fn set_de(&mut self, val: u16) {
+        self.d = ((val & 0xff00) >> 8) as u8;
+        self.e = (val & 0xff) as u8;
+    }
+
     pub fn hl(&self) -> u16 {
         ((self.h as u16) << 8) | (self.l as u16)
+    }
+
+    pub fn set_hl(&mut self, val: u16) {
+        self.h = ((val & 0xff00) >> 8) as u8;
+        self.l = (val & 0xff) as u8;
     }
 
     pub fn get_flag(&self, flag: Flag) -> bool {
