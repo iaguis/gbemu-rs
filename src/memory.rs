@@ -20,18 +20,18 @@ impl Memory {
         }
     }
 
-    pub fn read_byte(&self, address: usize) -> u8 {
+    pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0..=0x3FFE => self.rom_0[address],
-            0x3FFF..=0x7FFE => self.rom_n[address - 0x3FFF],
+            0..=0x3FFE => self.rom_0[address as usize],
+            0x3FFF..=0x7FFE => self.rom_n[address as usize - 0x3FFF],
             _ => panic!("bad address"),
         }
     }
 
-    pub fn write_byte(&mut self, address: usize, val: u8) {
+    pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0..=0x3FFE => self.rom_0[address] = val,
-            0x3FFF..=0x7FFE => self.rom_n[address - 0x3FFF] = val,
+            0..=0x3FFE => self.rom_0[address as usize] = val,
+            0x3FFF..=0x7FFE => self.rom_n[address as usize - 0x3FFF] = val,
             _ => panic!("bad address"),
         }
     }

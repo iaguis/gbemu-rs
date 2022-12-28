@@ -29,16 +29,16 @@ impl GPU {
         }
     }
 
-    pub fn read_byte(&self, address: usize) -> u8 {
+    pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0x8000..=0x9FFF => self.video_ram[address - 0x8000],
+            0x8000..=0x9FFF => self.video_ram[address as usize - 0x8000],
             _ => panic!("bad address"),
         }
     }
 
-    pub fn write_byte(&mut self, address: usize, val: u8) {
+    pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0x8000..=0x9FFF => self.video_ram[address - 0x8000] = val,
+            0x8000..=0x9FFF => self.video_ram[address as usize - 0x8000] = val,
             _ => panic!("bad address"),
         }
     }
