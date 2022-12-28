@@ -4,9 +4,12 @@ use std::fs::File;
 
 use crate::registers::Registers;
 use crate::memory::Memory;
+use crate::gpu::GPU;
 
 pub struct CPU {
     pub reg: Registers,
+    // XXX this doesn't make sense, the GPU is not inside the CPU :)
+    pub gpu: GPU,
     pub counter: i32,
     pub memory: Memory,
     pub tmp_buffer: Vec<u8>,
@@ -45,6 +48,7 @@ impl CPU {
     pub fn new() -> CPU {
         let mut cpu = CPU {
             reg: Registers::new(),
+            gpu: GPU::new(),
             counter: 20,
             memory: Memory::new(),
             // TODO remove

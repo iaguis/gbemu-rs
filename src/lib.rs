@@ -5,6 +5,7 @@ use std::thread;
 mod registers;
 mod memory;
 mod cpu;
+mod gpu;
 
 use cpu::CPU;
 
