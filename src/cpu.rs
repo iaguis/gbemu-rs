@@ -24,7 +24,47 @@ pub enum Opcode {
     POP(StackTarget),
     JP(JCondition),
     JR(JCondition),
+
+    ADD(ALUOperand),
+    ADC(ALUOperand),
+    SUB(ALUOperand),
+    AND(ALUOperand),
+    OR(ALUOperand),
+    XOR(ALUOperand),
+
+    CALL(JCondition),
+    RET(JCondition),
+    RETI,
+    RST(RSTAddress),
+
     DI,
+    STOP,
+    HALT,
+    EI,
+}
+
+#[derive(Debug)]
+pub enum ALUOperand {
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    D8,
+    HLIndirect,
+}
+
+#[derive(Debug)]
+pub enum RSTAddress {
+    X00,
+    X10,
+    X20,
+    X30,
+    X08,
+    X18,
+    X28,
+    X38,
 }
 
 #[derive(Debug)]
