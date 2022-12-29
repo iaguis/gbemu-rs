@@ -1027,7 +1027,10 @@ impl CPU {
                 }
             },
 
-            Opcode::JPI => todo!(),
+            Opcode::JPI => {
+                cycles = 1;
+                self.reg.pc = self.reg.hl();
+            },
 
             Opcode::JR(condition) => {
                 let offset = self.memory_bus.read_byte(self.reg.pc + 1) as i8;
@@ -1081,7 +1084,13 @@ impl CPU {
 
             Opcode::CALL(condition) => {
                 match condition  {
-                    JCondition::Nothing => todo!(),
+                    JCondition::Nothing => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                    },
                     JCondition::NZ => todo!(),
                     JCondition::NC => todo!(),
                     JCondition::Z => todo!(),
