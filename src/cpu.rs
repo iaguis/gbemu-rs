@@ -955,11 +955,17 @@ impl CPU {
                 self.reg.pc += 1;
             }
 
-            Opcode::RLCA => todo!(),
+            Opcode::RLCA => {
+                let r = (self.reg.a << 1) | (self.reg.a >> 7);
+                self.reg.a = r;
+            },
 
             Opcode::RLA => todo!(),
 
-            Opcode::RRCA => todo!(),
+            Opcode::RRCA => {
+                let r = (self.reg.a >> 1) | (self.reg.a << 7);
+                self.reg.a = r;
+            },
 
             Opcode::RRA => todo!(),
 
