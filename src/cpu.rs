@@ -70,6 +70,7 @@ pub enum Indirect {
     DEIndirect,
     HLIndirectInc,
     HLIndirectDec,
+    WordIndirect,
     LastByteIndirect,
 }
 
@@ -254,8 +255,23 @@ impl TryFrom<u8> for Opcode {
             0x7e => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::HLIndirect))),
             0x7f => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::A))),
 
+            0xc2 => Ok(Opcode::JP(JCondition::NZ)),
             0xc3 => Ok(Opcode::JP(JCondition::Nothing)),
-            0xea => Ok(Opcode::LD(LDType::AddressFromA)),
+            0xca => Ok(Opcode::JP(JCondition::Z)),
+
+            0xd2 => Ok(Opcode::JP(JCondition::NC)),
+            0xda => Ok(Opcode::JP(JCondition::C)),
+
+            0xe0 => Ok(Opcode::LD(LDType::AFromAddress)),
+
+            0xe2 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::LastByteIndirect))),
+            0xea => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::WordIndirect))),
+
+            0xf0 => Ok(Opcode::LD(LDType::AddressFromA)),
+
+            0xf2 => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::LastByteIndirect))),
+            0xfa => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::WordIndirect))),
+
             0xf3 => Ok(Opcode::DI),
             _ => Err("unknown opcode"),
         }
@@ -390,14 +406,29 @@ impl CPU {
 
                                 self.memory_bus.write_byte(r, a);
                             }
+                            Indirect::WordIndirect => {
+                                let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                                let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                                let address = ((msb as u16) << 8) | lsb as u16;
+
+                                self.memory_bus.write_byte(address, a);
+
+                            }
                             Indirect::LastByteIndirect => {
                                 let c = self.reg.c as u16;
                                 self.memory_bus.write_byte(0xFF00 + c, a);
                             }
                         }
-
-                        cycles = 2;
-                        self.reg.pc += 1;
+                        match indirect {
+                            Indirect::WordIndirect => {
+                                cycles = 4;
+                                self.reg.pc += 3;
+                            },
+                            _ => {
+                                cycles = 2;
+                                self.reg.pc += 1;
+                            }
+                        }
                     },
                     LDType::AddressFromA => {
                         let msb = self.memory_bus.read_byte(self.reg.pc + 2);
@@ -447,14 +478,28 @@ impl CPU {
 
                                 self.reg.a = self.memory_bus.read_byte(r);
                             }
+                            Indirect::WordIndirect => {
+                                let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                                let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                                let address = ((msb as u16) << 8) | lsb as u16;
+
+                                self.reg.a = self.memory_bus.read_byte(address);
+                            }
                             Indirect::LastByteIndirect => {
                                 let c = self.reg.c as u16;
                                 self.reg.a = self.memory_bus.read_byte(0xFF00 + c);
                             }
                         }
-
-                        cycles = 2;
-                        self.reg.pc += 1;
+                        match indirect {
+                            Indirect::WordIndirect => {
+                                cycles = 4;
+                                self.reg.pc += 3;
+                            },
+                            _ => {
+                                cycles = 2;
+                                self.reg.pc += 1;
+                            }
+                        }
                     },
 
                     LDType::SPFromHL => {
