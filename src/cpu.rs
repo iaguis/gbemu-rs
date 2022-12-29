@@ -18,8 +18,8 @@ pub struct CPU {
 pub enum Opcode {
     NOP,
     LD(LDType),
-    INC(IncTarget),
-    DEC(IncTarget),
+    INC(IncDecTarget),
+    DEC(IncDecTarget),
     PUSH(StackTarget),
     POP(StackTarget),
     JP(JPCondition),
@@ -48,7 +48,7 @@ pub enum LDType {
 }
 
 #[derive(Debug)]
-pub enum IncTarget {
+pub enum IncDecTarget {
     A,
     B,
     C,
@@ -123,9 +123,9 @@ impl TryFrom<u8> for Opcode {
             0x00 => Ok(Opcode::NOP),
             0x01 => Ok(Opcode::LD(LDType::Word(LDWordTarget::BC))),
             0x02 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::BCIndirect))),
-            0x03 => Ok(Opcode::INC(IncTarget::BC)),
-            0x04 => Ok(Opcode::INC(IncTarget::B)),
-            0x05 => Ok(Opcode::DEC(IncTarget::B)),
+            0x03 => Ok(Opcode::INC(IncDecTarget::BC)),
+            0x04 => Ok(Opcode::INC(IncDecTarget::B)),
+            0x05 => Ok(Opcode::DEC(IncDecTarget::B)),
             0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
             0x31 => Ok(Opcode::LD(LDType::Word(LDWordTarget::SP))),
             0xc3 => Ok(Opcode::JP(JPCondition::Nothing)),
@@ -288,30 +288,84 @@ impl CPU {
 
             Opcode::INC(target) => {
                 match target {
-                    IncTarget::A => { self.reg.a.wrapping_add(1); },
-                    IncTarget::B => { self.reg.b.wrapping_add(1); },
-                    IncTarget::C => { self.reg.c.wrapping_add(1); },
-                    IncTarget::D => { self.reg.d.wrapping_add(1); },
-                    IncTarget::E => { self.reg.e.wrapping_add(1); },
-                    IncTarget::H => { self.reg.h.wrapping_add(1); },
-                    IncTarget::L => { self.reg.l.wrapping_add(1); },
-                    IncTarget::BC => { self.reg.inc_bc(); },
-                    IncTarget::DE => {
-                        panic!("not implemented");
+                    IncDecTarget::A => { self.reg.a = self.reg.alu_inc(self.reg.a); },
+                    IncDecTarget::B => { self.reg.b = self.reg.alu_inc(self.reg.b); },
+                    IncDecTarget::C => { self.reg.c = self.reg.alu_inc(self.reg.c); },
+                    IncDecTarget::D => { self.reg.d = self.reg.alu_inc(self.reg.d); },
+                    IncDecTarget::E => { self.reg.e = self.reg.alu_inc(self.reg.e); },
+                    IncDecTarget::H => { self.reg.h = self.reg.alu_inc(self.reg.h); },
+                    IncDecTarget::L => { self.reg.l = self.reg.alu_inc(self.reg.l); },
+                    IncDecTarget::BC => {
+                        let r = self.reg.alu_inc16(self.reg.bc());
+                        self.reg.set_bc(r);
                     },
-                    IncTarget::HL => {
-                        panic!("not implemented");
+                    IncDecTarget::DE => {
+                        let r = self.reg.alu_inc16(self.reg.de());
+                        self.reg.set_de(r);
                     },
-                    IncTarget::SP => {
-                        panic!("not implemented");
+                    IncDecTarget::HL => {
+                        let r = self.reg.alu_inc16(self.reg.hl());
+                        self.reg.set_hl(r);
                     },
-                    IncTarget::HLIndirect => {
-                        panic!("not implemented");
+                    IncDecTarget::SP => {
+                        let r = self.reg.alu_inc16(self.reg.sp);
+                        self.reg.sp = r;
+                    },
+                    IncDecTarget::HLIndirect => {
+                        let val = self.memory_bus.read_byte(self.reg.hl());
+                        let r = self.reg.alu_dec(val);
+                        self.memory_bus.write_byte(self.reg.hl(), r);
                     },
                 }
-                cycles = 1;
+
+                match target {
+                    IncDecTarget::HLIndirect => { cycles = 3; },
+                    IncDecTarget::BC | IncDecTarget::DE | IncDecTarget::HL | IncDecTarget::SP => { cycles = 2; },
+                    _ => { cycles = 1; },
+                }
                 self.reg.pc += 1;
             },
+
+            Opcode::DEC(target) => {
+                match target {
+                    IncDecTarget::A => { self.reg.a = self.reg.alu_dec(self.reg.a); },
+                    IncDecTarget::B => { self.reg.b = self.reg.alu_dec(self.reg.b); },
+                    IncDecTarget::C => { self.reg.c = self.reg.alu_dec(self.reg.c); },
+                    IncDecTarget::D => { self.reg.d = self.reg.alu_dec(self.reg.d); },
+                    IncDecTarget::E => { self.reg.e = self.reg.alu_dec(self.reg.e); },
+                    IncDecTarget::H => { self.reg.h = self.reg.alu_dec(self.reg.h); },
+                    IncDecTarget::L => { self.reg.l = self.reg.alu_dec(self.reg.l); },
+                    IncDecTarget::BC => {
+                        let r = self.reg.alu_dec16(self.reg.bc());
+                        self.reg.set_bc(r);
+                    },
+                    IncDecTarget::DE => {
+                        let r = self.reg.alu_dec16(self.reg.de());
+                        self.reg.set_de(r);
+                    },
+                    IncDecTarget::HL => {
+                        let r = self.reg.alu_dec16(self.reg.hl());
+                        self.reg.set_hl(r);
+                    },
+                    IncDecTarget::SP => {
+                        let r = self.reg.alu_dec16(self.reg.sp);
+                        self.reg.sp = r;
+                    },
+                    IncDecTarget::HLIndirect => {
+                        let val = self.memory_bus.read_byte(self.reg.hl());
+                        let r = self.reg.alu_dec(val);
+                        self.memory_bus.write_byte(self.reg.hl(), r);
+                    },
+                }
+
+                match target {
+                    IncDecTarget::HLIndirect => { cycles = 3; },
+                    IncDecTarget::BC | IncDecTarget::DE | IncDecTarget::HL | IncDecTarget::SP => { cycles = 2; },
+                    _ => { cycles = 1 },
+                }
+                self.reg.pc += 1;
+            },
+
 
             Opcode::JP(condition) => {
                 match condition {

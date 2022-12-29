@@ -102,7 +102,7 @@ impl Registers {
         self.a = r;
     }
 
-    fn alu_inc(&mut self, a: u8) -> u8 {
+    pub fn alu_inc(&mut self, a: u8) -> u8 {
         let r = a.wrapping_add(1);
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
@@ -111,7 +111,18 @@ impl Registers {
         r
     }
 
-    fn alu_dec(&mut self, a: u8) -> u8 {
+    pub fn alu_inc16(&mut self, a: u16) -> u16 {
+        let r = a.wrapping_add(1);
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, (a & 0xF) + 1 > 0xF);
+        self.set_flag(Flag::C, (a & 0xFF) + 1 > 0xFF);
+
+        r
+    }
+
+    pub fn alu_dec(&mut self, a: u8) -> u8 {
         let r = a.wrapping_sub(1);
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
@@ -120,30 +131,15 @@ impl Registers {
         r
     }
 
-    // FIXME generalize to other registers?
-    pub fn inc_b(&mut self) {
-        self.b = self.alu_inc(self.b);
-    }
+    pub fn alu_dec16(&mut self, a: u16) -> u16 {
+        let r = a.wrapping_sub(1);
 
-    pub fn dec_b(&mut self) {
-        self.b = self.alu_dec(self.b);
-    }
-
-    pub fn inc_bc(&mut self) {
-        // FIXME this is wrong
-        self.c += 1;
-        if self.c == 0 {
-            self.b += 1;
-        }
-
-        self.set_flag(Flag::Z, false);
-        if self.bc() == 0 {
-            self.set_flag(Flag::Z, true);
-        }
-
+        self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, false);
-        // TODO if carry_per_bit[3] set_flag(Flag::H, true)
+        self.set_flag(Flag::H, (a & 0xF) == 0);
+        self.set_flag(Flag::C, (a & 0xFF) == 0);
+
+        r
     }
 }
 
