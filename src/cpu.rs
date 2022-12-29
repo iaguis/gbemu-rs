@@ -2,7 +2,7 @@ use std::thread;
 use std::time;
 use std::fs::File;
 
-use crate::registers::Registers;
+use crate::registers::{Flag,Registers};
 use crate::memory_bus::MemoryBus;
 
 pub struct CPU {
@@ -22,12 +22,13 @@ pub enum Opcode {
     DEC(IncDecTarget),
     PUSH(StackTarget),
     POP(StackTarget),
-    JP(JPCondition),
+    JP(JCondition),
+    JR(JCondition),
     DI,
 }
 
 #[derive(Debug)]
-pub enum JPCondition {
+pub enum JCondition {
     Nothing,
     NZ,
     NC,
@@ -127,8 +128,50 @@ impl TryFrom<u8> for Opcode {
             0x04 => Ok(Opcode::INC(IncDecTarget::B)),
             0x05 => Ok(Opcode::DEC(IncDecTarget::B)),
             0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
+
+            0x08 => Ok(Opcode::LD(LDType::IndirectFromSP)),
+
+            0x0a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::BCIndirect))),
+            0x0b => Ok(Opcode::DEC(IncDecTarget::BC)),
+            0x0c => Ok(Opcode::INC(IncDecTarget::C)),
+            0x0d => Ok(Opcode::DEC(IncDecTarget::C)),
+            0x0e => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::D8))),
+
+
+            0x11 => Ok(Opcode::LD(LDType::Word(LDWordTarget::DE))),
+            0x12 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::DEIndirect))),
+            0x13 => Ok(Opcode::INC(IncDecTarget::DE)),
+            0x14 => Ok(Opcode::INC(IncDecTarget::D)),
+            0x15 => Ok(Opcode::DEC(IncDecTarget::D)),
+            0x16 => Ok(Opcode::LD(LDType::Byte(LDTarget::D, LDSource::D8))),
+
+            0x18 => Ok(Opcode::JR(JCondition::Nothing)),
+
+            0x1a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::DEIndirect))),
+            0x1b => Ok(Opcode::DEC(IncDecTarget::DE)),
+            0x1c => Ok(Opcode::INC(IncDecTarget::E)),
+            0x1d => Ok(Opcode::DEC(IncDecTarget::E)),
+            0x1e => Ok(Opcode::LD(LDType::Byte(LDTarget::E, LDSource::D8))),
+
+            0x20 => Ok(Opcode::JR(JCondition::NZ)),
+            0x21 => Ok(Opcode::LD(LDType::Word(LDWordTarget::HL))),
+            0x22 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::HLIndirectInc))),
+            0x23 => Ok(Opcode::INC(IncDecTarget::HL)),
+            0x24 => Ok(Opcode::INC(IncDecTarget::H)),
+            0x25 => Ok(Opcode::DEC(IncDecTarget::H)),
+            0x26 => Ok(Opcode::LD(LDType::Byte(LDTarget::H, LDSource::D8))),
+
+            0x28 => Ok(Opcode::JR(JCondition::Z)),
+
+
+            0x2a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::HLIndirectInc))),
+            0x2b => Ok(Opcode::DEC(IncDecTarget::HL)),
+            0x2c => Ok(Opcode::INC(IncDecTarget::L)),
+            0x2d => Ok(Opcode::DEC(IncDecTarget::L)),
+            0x2e => Ok(Opcode::LD(LDType::Byte(LDTarget::L, LDSource::D8))),
+
             0x31 => Ok(Opcode::LD(LDType::Word(LDWordTarget::SP))),
-            0xc3 => Ok(Opcode::JP(JPCondition::Nothing)),
+            0xc3 => Ok(Opcode::JP(JCondition::Nothing)),
             0xea => Ok(Opcode::LD(LDType::AddressFromA)),
             0xf3 => Ok(Opcode::DI),
             _ => Err("unknown opcode"),
@@ -165,6 +208,7 @@ impl CPU {
         Ok(opcode)
     }
 
+    // TODO double-check cycles
     fn execute(&mut self) -> u8 {
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
@@ -252,14 +296,16 @@ impl CPU {
                                 self.memory_bus.write_byte(de, a);
                             }
                             Indirect::HLIndirectInc => {
-                                let hl = self.reg.hl();
-                                self.reg.set_hl(hl.wrapping_add(1));
-                                self.memory_bus.write_byte(hl, a);
+                                let r = self.reg.alu_inc16(self.reg.hl());
+                                self.reg.set_hl(r);
+
+                                self.memory_bus.write_byte(r, a);
                             }
                             Indirect::HLIndirectDec => {
-                                let hl = self.reg.hl();
-                                self.reg.set_hl(hl.wrapping_sub(1));
-                                self.memory_bus.write_byte(hl.wrapping_sub(1), a);
+                                let r = self.reg.alu_dec16(self.reg.hl());
+                                self.reg.set_hl(r);
+
+                                self.memory_bus.write_byte(r, a);
                             }
                             Indirect::LastByteIndirect => {
                                 let c = self.reg.c as u16;
@@ -282,7 +328,70 @@ impl CPU {
                         cycles = 4;
                         self.reg.pc += 3;
                     },
-                    _ => { panic!("not implemented"); }
+
+                    LDType::AFromAddress => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                        let address = ((msb as u16) << 8) | lsb as u16;
+
+                        println!("address {:#04x}", address);
+
+                        self.reg.a = self.memory_bus.read_byte(address);
+
+                        cycles = 4;
+                        self.reg.pc += 3;
+                    },
+
+                    LDType::AFromIndirect(indirect) => {
+                        match indirect {
+                            Indirect::BCIndirect => {
+                                let bc = self.reg.bc();
+                                self.reg.a = self.memory_bus.read_byte(bc);
+                            }
+                            Indirect::DEIndirect => {
+                                let de = self.reg.de();
+                                self.reg.a = self.memory_bus.read_byte(de);
+                            }
+                            Indirect::HLIndirectInc => {
+                                let r = self.reg.alu_inc16(self.reg.hl());
+                                self.reg.set_hl(r);
+
+                                self.reg.a = self.memory_bus.read_byte(r);
+                            }
+                            Indirect::HLIndirectDec => {
+                                let r = self.reg.alu_dec16(self.reg.hl());
+                                self.reg.set_hl(r);
+
+                                self.reg.a = self.memory_bus.read_byte(r);
+                            }
+                            Indirect::LastByteIndirect => {
+                                let c = self.reg.c as u16;
+                                self.reg.a = self.memory_bus.read_byte(0xFF00 + c);
+                            }
+                        }
+
+                        cycles = 2;
+                        self.reg.pc += 1;
+                    },
+
+                    LDType::SPFromHL => {
+                        self.reg.sp = self.reg.hl();
+
+                        cycles = 2;
+                        self.reg.pc += 1;
+                    },
+
+                    LDType::IndirectFromSP => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+                        let address = ((msb as u16) << 8) | lsb as u16;
+
+                        self.memory_bus.write_byte(address, (self.reg.sp & 0xff) as u8);
+                        self.memory_bus.write_byte(address+1, (self.reg.sp >> 8) as u8);
+
+                        cycles = 5;
+                        self.reg.pc += 3;
+                    },
                 }
             },
 
@@ -366,20 +475,102 @@ impl CPU {
                 self.reg.pc += 1;
             },
 
-
             Opcode::JP(condition) => {
+                let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                let jp_address = ((msb as u16) << 8) | (lsb as u16);
+
                 match condition {
-                    JPCondition::Nothing => {
-                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
-                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
-
-                        let jp_address = ((msb as u16) << 8) | (lsb as u16);
-
-                        cycles = 4;
+                    JCondition::Nothing => {
                         self.reg.pc = jp_address;
+                        cycles = 4;
                     },
-                    _ => {
-                        panic!("not implemented");
+                    JCondition::NZ => {
+                        if !self.reg.get_flag(Flag::Z) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::NC => {
+                        if !self.reg.get_flag(Flag::C) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::Z => {
+                        if self.reg.get_flag(Flag::Z) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::C => {
+                        if self.reg.get_flag(Flag::C) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                }
+            },
+
+            Opcode::JR(condition) => {
+                let offset = self.memory_bus.read_byte(self.reg.pc + 1) as i8;
+                self.reg.pc += 1;
+
+                let jp_address = (self.reg.pc + 1).wrapping_add(offset as u16);
+
+                match condition {
+                    JCondition::Nothing => {
+                        self.reg.pc = jp_address;
+                        cycles = 4;
+                    },
+                    JCondition::NZ => {
+                        if !self.reg.get_flag(Flag::Z) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::NC => {
+                        if !self.reg.get_flag(Flag::C) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::Z => {
+                        if self.reg.get_flag(Flag::Z) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
+                    },
+                    JCondition::C => {
+                        if self.reg.get_flag(Flag::C) {
+                            self.reg.pc = jp_address;
+                            cycles = 4;
+                        } else {
+                            self.reg.pc += 1;
+                            cycles = 3;
+                        }
                     },
                 }
             },
