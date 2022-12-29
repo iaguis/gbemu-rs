@@ -89,17 +89,139 @@ impl Registers {
         }
     }
 
-    pub fn alu_add(&mut self, b: u8) {
+    fn alu_add_internal(&mut self, b: u8, with_carry: bool) {
         let a = self.a;
         let c = self.get_flag(Flag::C) as u8;
-        let r = a.wrapping_add(b).wrapping_add(c);
+        let mut r = a.wrapping_add(b);
+
+        if with_carry {
+            r = r.wrapping_add(c);
+        }
 
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
         // half carry
-        self.set_flag(Flag::H, (a & 0xF) + (b & 0xF) + c > 0xF);
-        self.set_flag(Flag::C, (a as u16) + (b as u16) + (c as u16) > 0xFF);
+
+        if with_carry {
+            self.set_flag(Flag::C, (a as u16) + (b as u16) + (c as u16) > 0xFF);
+            self.set_flag(Flag::H, (a & 0xF) + (b & 0xF) + c > 0xF);
+        } else {
+            self.set_flag(Flag::C, (a as u16) + (b as u16) > 0xFF);
+            self.set_flag(Flag::H, (a & 0xF) + (b & 0xF) > 0xF);
+        }
+
         self.a = r;
+    }
+
+    pub fn alu_add(&mut self, b: u8) {
+        self.alu_add_internal(b, false)
+    }
+
+    pub fn alu_addhl(&mut self, b: u16) {
+        let hl = self.hl();
+        let r = hl.wrapping_add(b);
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::C, hl + b > 0xFF);
+        self.set_flag(Flag::H, (hl & 0xF) + (b & 0xF) > 0xF);
+
+        let msb = (r >> 8) as u8;
+        let lsb = (r & 0xf) as u8;
+
+        self.h = msb;
+        self.l = lsb;
+    }
+
+    pub fn alu_addsp(&mut self, b: u8) {
+        let val = b as i8;
+        let r = (self.sp as i16).wrapping_add(val as i16) as u16;
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::C, self.sp + r > 0xFF);
+        self.set_flag(Flag::H, (self.sp & 0xF) + (r & 0xF) > 0xF);
+
+        self.sp = r;
+    }
+
+    pub fn alu_adc(&mut self, b: u8) {
+        self.alu_add_internal(b, true)
+    }
+
+    fn alu_sub_internal(&mut self, b: u8, with_carry: bool) {
+        let a = self.a;
+        let c = self.get_flag(Flag::C) as u8;
+        let mut r = a.wrapping_sub(b);
+
+        if with_carry {
+            r = r.wrapping_sub(c);
+        }
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        // half carry
+
+        if with_carry {
+            self.set_flag(Flag::C, (a as i16) - (b as i16) - (c as i16) < 0);
+            self.set_flag(Flag::H, ((a & 0xF) as i16) - ((b & 0xF) as i16) - (c as i16) < 0);
+        } else {
+            self.set_flag(Flag::C, (a as i16) - (b as i16) < 0);
+            self.set_flag(Flag::H, ((a & 0xF) as i16) - ((b & 0xF) as i16) < 0);
+        }
+
+        self.a = r;
+    }
+
+    pub fn alu_sub(&mut self, b: u8) {
+        self.alu_sub_internal(b, false)
+    }
+
+    pub fn alu_sbc(&mut self, b: u8) {
+        self.alu_sub_internal(b, true)
+    }
+
+    pub fn alu_and(&mut self, b: u8) {
+        let r = self.a & b;
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, true);
+        self.set_flag(Flag::C, false);
+
+        self.a = r;
+    }
+
+    pub fn alu_xor(&mut self, b: u8) {
+        let r = self.a ^ b;
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, false);
+        self.set_flag(Flag::C, false);
+
+        self.a = r;
+    }
+
+    pub fn alu_or(&mut self, b: u8) {
+        let r = self.a | b;
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, false);
+        self.set_flag(Flag::C, false);
+
+        self.a = r;
+    }
+
+    pub fn alu_cp(&mut self, b: u8) {
+        let a = self.a;
+        let r = a.wrapping_sub(b);
+
+        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::N, true);
+        self.set_flag(Flag::C, (a as i16) - (b as i16) < 0);
+        self.set_flag(Flag::H, ((a & 0xF) as i16) - ((b & 0xF) as i16) < 0);
     }
 
     pub fn alu_inc(&mut self, a: u8) -> u8 {
@@ -140,6 +262,24 @@ impl Registers {
         self.set_flag(Flag::C, (a & 0xFF) == 0);
 
         r
+    }
+
+    pub fn alu_cpl(&mut self) {
+        self.a = !self.a;
+        self.set_flag(Flag::N, true);
+        self.set_flag(Flag::H, true);
+    }
+
+    pub fn alu_ccf(&mut self) {
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, false);
+        self.set_flag(Flag::C, !self.get_flag(Flag::C));
+    }
+
+    pub fn alu_scf(&mut self) {
+        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::H, false);
+        self.set_flag(Flag::C, true);
     }
 }
 

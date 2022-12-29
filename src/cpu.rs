@@ -23,14 +23,29 @@ pub enum Opcode {
     PUSH(StackTarget),
     POP(StackTarget),
     JP(JCondition),
+    JPI,
     JR(JCondition),
 
     ADD(ALUOperand),
+    ADDHL(ADDHLOperand),
+    ADDSP,
     ADC(ALUOperand),
     SUB(ALUOperand),
+    SBC(ALUOperand),
     AND(ALUOperand),
     OR(ALUOperand),
     XOR(ALUOperand),
+    CP(ALUOperand),
+
+    CPL,
+    CCF,
+    SCF,
+    DAA,
+
+    RLCA,
+    RLA,
+    RRCA,
+    RRA,
 
     CALL(JCondition),
     RET(JCondition),
@@ -45,6 +60,7 @@ pub enum Opcode {
 
 #[derive(Debug)]
 pub enum ALUOperand {
+    A,
     B,
     C,
     D,
@@ -53,6 +69,14 @@ pub enum ALUOperand {
     L,
     D8,
     HLIndirect,
+}
+
+#[derive(Debug)]
+pub enum ADDHLOperand {
+    BC,
+    DE,
+    HL,
+    SP,
 }
 
 #[derive(Debug)]
@@ -169,31 +193,31 @@ impl TryFrom<u8> for Opcode {
             0x04 => Ok(Opcode::INC(IncDecTarget::B)),
             0x05 => Ok(Opcode::DEC(IncDecTarget::B)),
             0x06 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D8))),
-
+            0x07 => Ok(Opcode::RLCA),
             0x08 => Ok(Opcode::LD(LDType::IndirectFromSP)),
-
+            0x09 => Ok(Opcode::ADDHL(ADDHLOperand::BC)),
             0x0a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::BCIndirect))),
             0x0b => Ok(Opcode::DEC(IncDecTarget::BC)),
             0x0c => Ok(Opcode::INC(IncDecTarget::C)),
             0x0d => Ok(Opcode::DEC(IncDecTarget::C)),
             0x0e => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::D8))),
-
-
+            0x0f => Ok(Opcode::RRCA),
+            0x10 => Ok(Opcode::STOP),
             0x11 => Ok(Opcode::LD(LDType::Word(LDWordTarget::DE))),
             0x12 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::DEIndirect))),
             0x13 => Ok(Opcode::INC(IncDecTarget::DE)),
             0x14 => Ok(Opcode::INC(IncDecTarget::D)),
             0x15 => Ok(Opcode::DEC(IncDecTarget::D)),
             0x16 => Ok(Opcode::LD(LDType::Byte(LDTarget::D, LDSource::D8))),
-
+            0x17 => Ok(Opcode::RLA),
             0x18 => Ok(Opcode::JR(JCondition::Nothing)),
-
+            0x19 => Ok(Opcode::ADDHL(ADDHLOperand::DE)),
             0x1a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::DEIndirect))),
             0x1b => Ok(Opcode::DEC(IncDecTarget::DE)),
             0x1c => Ok(Opcode::INC(IncDecTarget::E)),
             0x1d => Ok(Opcode::DEC(IncDecTarget::E)),
             0x1e => Ok(Opcode::LD(LDType::Byte(LDTarget::E, LDSource::D8))),
-
+            0x1f => Ok(Opcode::RRA),
             0x20 => Ok(Opcode::JR(JCondition::NZ)),
             0x21 => Ok(Opcode::LD(LDType::Word(LDWordTarget::HL))),
             0x22 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::HLIndirectInc))),
@@ -201,16 +225,15 @@ impl TryFrom<u8> for Opcode {
             0x24 => Ok(Opcode::INC(IncDecTarget::H)),
             0x25 => Ok(Opcode::DEC(IncDecTarget::H)),
             0x26 => Ok(Opcode::LD(LDType::Byte(LDTarget::H, LDSource::D8))),
-
+            0x27 => Ok(Opcode::DAA),
             0x28 => Ok(Opcode::JR(JCondition::Z)),
-
-
+            0x29 => Ok(Opcode::ADDHL(ADDHLOperand::HL)),
             0x2a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::HLIndirectInc))),
             0x2b => Ok(Opcode::DEC(IncDecTarget::HL)),
             0x2c => Ok(Opcode::INC(IncDecTarget::L)),
             0x2d => Ok(Opcode::DEC(IncDecTarget::L)),
             0x2e => Ok(Opcode::LD(LDType::Byte(LDTarget::L, LDSource::D8))),
-
+            0x2f => Ok(Opcode::CPL),
             0x30 => Ok(Opcode::JR(JCondition::NC)),
             0x31 => Ok(Opcode::LD(LDType::Word(LDWordTarget::SP))),
             0x32 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::HLIndirectDec))),
@@ -218,15 +241,15 @@ impl TryFrom<u8> for Opcode {
             0x34 => Ok(Opcode::INC(IncDecTarget::HLIndirect)),
             0x35 => Ok(Opcode::DEC(IncDecTarget::HLIndirect)),
             0x36 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::D8))),
-
+            0x37 => Ok(Opcode::SCF),
             0x38 => Ok(Opcode::JR(JCondition::C)),
-
+            0x39 => Ok(Opcode::ADDHL(ADDHLOperand::SP)),
             0x3a => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::HLIndirectDec))),
             0x3b => Ok(Opcode::DEC(IncDecTarget::SP)),
             0x3c => Ok(Opcode::INC(IncDecTarget::A)),
             0x3d => Ok(Opcode::DEC(IncDecTarget::A)),
             0x3e => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::D8))),
-
+            0x3f => Ok(Opcode::CCF),
             0x40 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::B))),
             0x41 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::C))),
             0x42 => Ok(Opcode::LD(LDType::Byte(LDTarget::B, LDSource::D))),
@@ -243,7 +266,6 @@ impl TryFrom<u8> for Opcode {
             0x4d => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::L))),
             0x4e => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::HLIndirect))),
             0x4f => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::A))),
-
             0x50 => Ok(Opcode::LD(LDType::Byte(LDTarget::D, LDSource::B))),
             0x51 => Ok(Opcode::LD(LDType::Byte(LDTarget::D, LDSource::C))),
             0x52 => Ok(Opcode::LD(LDType::Byte(LDTarget::D, LDSource::D))),
@@ -260,7 +282,6 @@ impl TryFrom<u8> for Opcode {
             0x5d => Ok(Opcode::LD(LDType::Byte(LDTarget::E, LDSource::L))),
             0x5e => Ok(Opcode::LD(LDType::Byte(LDTarget::E, LDSource::HLIndirect))),
             0x5f => Ok(Opcode::LD(LDType::Byte(LDTarget::E, LDSource::A))),
-
             0x60 => Ok(Opcode::LD(LDType::Byte(LDTarget::H, LDSource::B))),
             0x61 => Ok(Opcode::LD(LDType::Byte(LDTarget::H, LDSource::C))),
             0x62 => Ok(Opcode::LD(LDType::Byte(LDTarget::H, LDSource::D))),
@@ -277,14 +298,13 @@ impl TryFrom<u8> for Opcode {
             0x6d => Ok(Opcode::LD(LDType::Byte(LDTarget::L, LDSource::L))),
             0x6e => Ok(Opcode::LD(LDType::Byte(LDTarget::L, LDSource::HLIndirect))),
             0x6f => Ok(Opcode::LD(LDType::Byte(LDTarget::L, LDSource::A))),
-
             0x70 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::B))),
             0x71 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::C))),
             0x72 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::D))),
             0x73 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::E))),
             0x74 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::H))),
             0x75 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::L))),
-
+            0x76 => Ok(Opcode::HALT),
             0x77 => Ok(Opcode::LD(LDType::Byte(LDTarget::HLIndirect, LDSource::A))),
             0x78 => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::B))),
             0x79 => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::C))),
@@ -294,25 +314,123 @@ impl TryFrom<u8> for Opcode {
             0x7d => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::L))),
             0x7e => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::HLIndirect))),
             0x7f => Ok(Opcode::LD(LDType::Byte(LDTarget::A, LDSource::A))),
-
+            0x80 => Ok(Opcode::ADD(ALUOperand::B)),
+            0x81 => Ok(Opcode::ADD(ALUOperand::C)),
+            0x82 => Ok(Opcode::ADD(ALUOperand::D)),
+            0x83 => Ok(Opcode::ADD(ALUOperand::E)),
+            0x84 => Ok(Opcode::ADD(ALUOperand::H)),
+            0x85 => Ok(Opcode::ADD(ALUOperand::L)),
+            0x86 => Ok(Opcode::ADD(ALUOperand::HLIndirect)),
+            0x87 => Ok(Opcode::ADD(ALUOperand::A)),
+            0x88 => Ok(Opcode::ADC(ALUOperand::B)),
+            0x89 => Ok(Opcode::ADC(ALUOperand::C)),
+            0x8a => Ok(Opcode::ADC(ALUOperand::D)),
+            0x8b => Ok(Opcode::ADC(ALUOperand::E)),
+            0x8c => Ok(Opcode::ADC(ALUOperand::H)),
+            0x8d => Ok(Opcode::ADC(ALUOperand::L)),
+            0x8e => Ok(Opcode::ADC(ALUOperand::HLIndirect)),
+            0x8f => Ok(Opcode::ADC(ALUOperand::A)),
+            0x90 => Ok(Opcode::SUB(ALUOperand::B)),
+            0x91 => Ok(Opcode::SUB(ALUOperand::C)),
+            0x92 => Ok(Opcode::SUB(ALUOperand::D)),
+            0x93 => Ok(Opcode::SUB(ALUOperand::E)),
+            0x94 => Ok(Opcode::SUB(ALUOperand::H)),
+            0x95 => Ok(Opcode::SUB(ALUOperand::L)),
+            0x96 => Ok(Opcode::SUB(ALUOperand::HLIndirect)),
+            0x97 => Ok(Opcode::SUB(ALUOperand::A)),
+            0x98 => Ok(Opcode::SBC(ALUOperand::B)),
+            0x99 => Ok(Opcode::SBC(ALUOperand::C)),
+            0x9a => Ok(Opcode::SBC(ALUOperand::D)),
+            0x9b => Ok(Opcode::SBC(ALUOperand::E)),
+            0x9c => Ok(Opcode::SBC(ALUOperand::H)),
+            0x9d => Ok(Opcode::SBC(ALUOperand::L)),
+            0x9e => Ok(Opcode::SBC(ALUOperand::HLIndirect)),
+            0x9f => Ok(Opcode::SBC(ALUOperand::A)),
+            0xa0 => Ok(Opcode::AND(ALUOperand::B)),
+            0xa1 => Ok(Opcode::AND(ALUOperand::C)),
+            0xa2 => Ok(Opcode::AND(ALUOperand::D)),
+            0xa3 => Ok(Opcode::AND(ALUOperand::E)),
+            0xa4 => Ok(Opcode::AND(ALUOperand::H)),
+            0xa5 => Ok(Opcode::AND(ALUOperand::L)),
+            0xa6 => Ok(Opcode::AND(ALUOperand::HLIndirect)),
+            0xa7 => Ok(Opcode::AND(ALUOperand::A)),
+            0xa8 => Ok(Opcode::XOR(ALUOperand::B)),
+            0xa9 => Ok(Opcode::XOR(ALUOperand::C)),
+            0xaa => Ok(Opcode::XOR(ALUOperand::D)),
+            0xab => Ok(Opcode::XOR(ALUOperand::E)),
+            0xac => Ok(Opcode::XOR(ALUOperand::H)),
+            0xad => Ok(Opcode::XOR(ALUOperand::L)),
+            0xae => Ok(Opcode::XOR(ALUOperand::HLIndirect)),
+            0xaf => Ok(Opcode::XOR(ALUOperand::A)),
+            0xb0 => Ok(Opcode::OR(ALUOperand::B)),
+            0xb1 => Ok(Opcode::OR(ALUOperand::C)),
+            0xb2 => Ok(Opcode::OR(ALUOperand::D)),
+            0xb3 => Ok(Opcode::OR(ALUOperand::E)),
+            0xb4 => Ok(Opcode::OR(ALUOperand::H)),
+            0xb5 => Ok(Opcode::OR(ALUOperand::L)),
+            0xb6 => Ok(Opcode::OR(ALUOperand::HLIndirect)),
+            0xb7 => Ok(Opcode::OR(ALUOperand::A)),
+            0xb8 => Ok(Opcode::CP(ALUOperand::B)),
+            0xb9 => Ok(Opcode::CP(ALUOperand::C)),
+            0xba => Ok(Opcode::CP(ALUOperand::D)),
+            0xbb => Ok(Opcode::CP(ALUOperand::E)),
+            0xbc => Ok(Opcode::CP(ALUOperand::H)),
+            0xbd => Ok(Opcode::CP(ALUOperand::L)),
+            0xbe => Ok(Opcode::CP(ALUOperand::HLIndirect)),
+            0xbf => Ok(Opcode::CP(ALUOperand::A)),
+            0xc0 => Ok(Opcode::RET(JCondition::NZ)),
+            0xc1 => Ok(Opcode::POP(StackTarget::BC)),
             0xc2 => Ok(Opcode::JP(JCondition::NZ)),
             0xc3 => Ok(Opcode::JP(JCondition::Nothing)),
+            0xc4 => Ok(Opcode::CALL(JCondition::NZ)),
+            0xc5 => Ok(Opcode::PUSH(StackTarget::BC)),
+            0xc6 => Ok(Opcode::ADD(ALUOperand::D8)),
+            0xc7 => Ok(Opcode::RST(RSTAddress::X00)),
+            0xc8 => Ok(Opcode::RET(JCondition::Z)),
+            0xc9 => Ok(Opcode::RET(JCondition::Nothing)),
             0xca => Ok(Opcode::JP(JCondition::Z)),
-
+            // 0xcb PREFIX
+            0xcc => Ok(Opcode::CALL(JCondition::Z)),
+            0xcd => Ok(Opcode::CALL(JCondition::Nothing)),
+            0xce => Ok(Opcode::ADC(ALUOperand::D8)),
+            0xcf => Ok(Opcode::RST(RSTAddress::X08)),
+            0xd0 => Ok(Opcode::RET(JCondition::NC)),
+            0xd1 => Ok(Opcode::POP(StackTarget::DE)),
             0xd2 => Ok(Opcode::JP(JCondition::NC)),
+            0xd4 => Ok(Opcode::CALL(JCondition::NC)),
+            0xd5 => Ok(Opcode::PUSH(StackTarget::DE)),
+            0xd6 => Ok(Opcode::SUB(ALUOperand::D8)),
+            0xd7 => Ok(Opcode::RST(RSTAddress::X10)),
+            0xd8 => Ok(Opcode::RET(JCondition::C)),
+            0xd9 => Ok(Opcode::RETI),
             0xda => Ok(Opcode::JP(JCondition::C)),
-
+            0xdc => Ok(Opcode::CALL(JCondition::C)),
+            0xde => Ok(Opcode::SBC(ALUOperand::D8)),
+            0xdf => Ok(Opcode::RST(RSTAddress::X18)),
             0xe0 => Ok(Opcode::LD(LDType::AFromAddress)),
-
+            0xe1 => Ok(Opcode::POP(StackTarget::HL)),
             0xe2 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::LastByteIndirect))),
+            0xe5 => Ok(Opcode::PUSH(StackTarget::HL)),
+            0xe6 => Ok(Opcode::AND(ALUOperand::D8)),
+            0xe7 => Ok(Opcode::RST(RSTAddress::X20)),
+            0xe8 => Ok(Opcode::ADDSP),
+            0xe9 => Ok(Opcode::JPI),
             0xea => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::WordIndirect))),
-
+            0xee => Ok(Opcode::XOR(ALUOperand::D8)),
+            0xef => Ok(Opcode::RST(RSTAddress::X28)),
             0xf0 => Ok(Opcode::LD(LDType::AddressFromA)),
-
+            0xf1 => Ok(Opcode::POP(StackTarget::AF)),
             0xf2 => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::LastByteIndirect))),
-            0xfa => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::WordIndirect))),
-
             0xf3 => Ok(Opcode::DI),
+            0xf5 => Ok(Opcode::PUSH(StackTarget::AF)),
+            0xf6 => Ok(Opcode::OR(ALUOperand::D8)),
+            0xf7 => Ok(Opcode::RST(RSTAddress::X30)),
+            0xf8 => Ok(Opcode::LD(LDType::IndirectFromSP)),
+            0xf9 => Ok(Opcode::LD(LDType::SPFromHL)),
+            0xfa => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::WordIndirect))),
+            0xfb => Ok(Opcode::EI),
+            0xfe => Ok(Opcode::CP(ALUOperand::D8)),
+            0xff => Ok(Opcode::RST(RSTAddress::X38)),
             _ => Err("unknown opcode"),
         }
     }
@@ -643,6 +761,220 @@ impl CPU {
                 self.reg.pc += 1;
             },
 
+            Opcode::ADD(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_add(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_add(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_add(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_add(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_add(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_add(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_add(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_add(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_add(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            },
+
+            Opcode::ADDHL(operand) => {
+                match operand {
+                    ADDHLOperand::BC => {
+                        self.reg.alu_addhl(self.reg.bc());
+                    },
+                    ADDHLOperand::DE => {
+                        self.reg.alu_addhl(self.reg.de());
+                    },
+                    ADDHLOperand::HL => {
+                        self.reg.alu_addhl(self.reg.hl());
+                    },
+                    ADDHLOperand::SP => {
+                        self.reg.alu_addhl(self.reg.sp);
+                    },
+                }
+            },
+
+            Opcode::ADDSP => {
+                let val = self.memory_bus.read_byte(self.reg.pc + 1);
+                self.reg.alu_addsp(val);
+            },
+
+            Opcode::ADC(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_adc(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_adc(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_adc(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_adc(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_adc(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_adc(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_adc(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_adc(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_adc(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            },
+
+            Opcode::SUB(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_sub(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_sub(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_sub(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_sub(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_sub(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_sub(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_sub(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_sub(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_sub(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::SBC(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_sbc(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_sbc(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_sbc(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_sbc(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_sbc(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_sbc(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_sbc(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_sbc(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_sbc(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::AND(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_and(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_and(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_and(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_and(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_and(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_and(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_and(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_and(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_and(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::XOR(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_xor(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_xor(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_xor(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_xor(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_xor(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_xor(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_xor(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_xor(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_xor(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::OR(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_or(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_or(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_or(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_or(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_or(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_or(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_or(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_or(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_or(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::CP(operand) => {
+                match operand {
+                    ALUOperand::A => { self.reg.alu_cp(self.reg.a) },
+                    ALUOperand::B => { self.reg.alu_cp(self.reg.b) },
+                    ALUOperand::C => { self.reg.alu_cp(self.reg.c) },
+                    ALUOperand::D => { self.reg.alu_cp(self.reg.d) },
+                    ALUOperand::E => { self.reg.alu_cp(self.reg.e) },
+                    ALUOperand::H => { self.reg.alu_cp(self.reg.h) },
+                    ALUOperand::L => { self.reg.alu_cp(self.reg.l) },
+                    ALUOperand::HLIndirect => {
+                        let data = self.memory_bus.read_byte(self.reg.hl());
+                        self.reg.alu_cp(data);
+                    },
+                    ALUOperand::D8 => {
+                        let data = self.memory_bus.read_byte(self.reg.pc + 1);
+                        self.reg.alu_cp(data);
+                    },
+                }
+                cycles = 1;
+                self.reg.pc += 1;
+            }
+
+            Opcode::RLCA => todo!(),
+
+            Opcode::RLA => todo!(),
+
+            Opcode::RRCA => todo!(),
+
+            Opcode::RRA => todo!(),
+
+            Opcode::CPL => { self.reg.alu_cpl(); },
+
+            Opcode::CCF => { self.reg.alu_ccf(); },
+
+            Opcode::SCF => { self.reg.alu_scf(); },
+
+            Opcode::DAA => todo!(),
+
             Opcode::JP(condition) => {
                 let msb = self.memory_bus.read_byte(self.reg.pc + 2);
                 let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
@@ -692,6 +1024,8 @@ impl CPU {
                     },
                 }
             },
+
+            Opcode::JPI => todo!(),
 
             Opcode::JR(condition) => {
                 let offset = self.memory_bus.read_byte(self.reg.pc + 1) as i8;
@@ -743,11 +1077,126 @@ impl CPU {
                 }
             },
 
-            Opcode::DI => {
-                self.IME = false;
+            Opcode::CALL(condition) => {
+                match condition  {
+                    JCondition::Nothing => todo!(),
+                    JCondition::NZ => todo!(),
+                    JCondition::NC => todo!(),
+                    JCondition::Z => todo!(),
+                    JCondition::C => todo!(),
+                }
+            }
+
+            Opcode::RET(condition) => {
+                match condition {
+                    JCondition::Nothing => todo!(),
+                    JCondition::NZ => todo!(),
+                    JCondition::NC => todo!(),
+                    JCondition::Z => todo!(),
+                    JCondition::C => todo!(),
+                }
+            }
+
+            Opcode::RETI => todo!(),
+
+            Opcode::RST(address) => {
+                match address {
+                    RSTAddress::X00 => todo!(),
+                    RSTAddress::X10 => todo!(),
+                    RSTAddress::X20 => todo!(),
+                    RSTAddress::X30 => todo!(),
+                    RSTAddress::X08 => todo!(),
+                    RSTAddress::X18 => todo!(),
+                    RSTAddress::X28 => todo!(),
+                    RSTAddress::X38 => todo!(),
+                }
+            }
+
+            Opcode::STOP => todo!(),
+
+            Opcode::HALT => todo!(),
+
+            Opcode::PUSH(target) => {
+                self.reg.sp -= 1;
+
+                match target {
+                    StackTarget::AF => {
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.a);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.f);
+                    },
+                    StackTarget::BC => {
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.b);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.c);
+                    },
+                    StackTarget::DE => {
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.d);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.e);
+                    },
+                    StackTarget::HL => {
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.h);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, self.reg.l);
+                    },
+                }
+
+                cycles = 4;
                 self.reg.pc += 1;
             },
-            _ => { panic!("not implemented"); },
+
+            Opcode::POP(target) => {
+                match target {
+                    StackTarget::AF => {
+                        let lsb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        let msb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        self.reg.a = msb;
+                        self.reg.f = lsb;
+                    },
+                    StackTarget::BC => {
+                        let lsb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        let msb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        self.reg.a = msb;
+                        self.reg.f = lsb;
+                    },
+                    StackTarget::DE => {
+                        let lsb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        let msb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        self.reg.a = msb;
+                        self.reg.f = lsb;
+                    },
+                    StackTarget::HL => {
+                        let lsb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        let msb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        self.reg.a = msb;
+                        self.reg.f = lsb;
+                    },
+                }
+
+                cycles = 3;
+                self.reg.pc += 1;
+            },
+
+            Opcode::DI => {
+                self.IME = false;
+                cycles = 1;
+                self.reg.pc += 1;
+            },
+
+            Opcode::EI => {
+                self.IME = true;
+                cycles = 1;
+                self.reg.pc += 1;
+            },
         };
 
         println!("{} cycles", cycles);
