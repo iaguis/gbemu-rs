@@ -57,6 +57,26 @@ pub enum Opcode {
     DI,
     HALT,
     EI,
+
+    PREFIX,
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+pub enum PrefixedOpcode {
+    RLC(RotateOperand),
+}
+
+#[derive(Debug)]
+pub enum RotateOperand {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    HLIndirect,
 }
 
 #[derive(Debug)]
@@ -388,7 +408,7 @@ impl TryFrom<u8> for Opcode {
             0xc8 => Ok(Opcode::RET(JCondition::Z)),
             0xc9 => Ok(Opcode::RET(JCondition::Nothing)),
             0xca => Ok(Opcode::JP(JCondition::Z)),
-            // 0xcb PREFIX
+            0xcb => Ok(Opcode::PREFIX),
             0xcc => Ok(Opcode::CALL(JCondition::Z)),
             0xcd => Ok(Opcode::CALL(JCondition::Nothing)),
             0xce => Ok(Opcode::ADC(ALUOperand::D8)),
@@ -435,6 +455,24 @@ impl TryFrom<u8> for Opcode {
     }
 }
 
+
+impl TryFrom<u8> for PrefixedOpcode {
+    type Error = &'static str;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0x00 => Ok(PrefixedOpcode::RLC(RotateOperand::B)),
+            0x01 => Ok(PrefixedOpcode::RLC(RotateOperand::C)),
+            0x02 => Ok(PrefixedOpcode::RLC(RotateOperand::D)),
+            0x03 => Ok(PrefixedOpcode::RLC(RotateOperand::E)),
+            0x04 => Ok(PrefixedOpcode::RLC(RotateOperand::H)),
+            0x05 => Ok(PrefixedOpcode::RLC(RotateOperand::L)),
+            0x06 => Ok(PrefixedOpcode::RLC(RotateOperand::HLIndirect)),
+            0x07 => Ok(PrefixedOpcode::RLC(RotateOperand::A)),
+            _ => Err("unknown prefixed opcode"),
+        }
+    }
+}
+
 impl CPU {
     pub fn new() -> CPU {
         let mut cpu = CPU {
@@ -463,6 +501,15 @@ impl CPU {
 
         let opcode = Opcode::try_from(b)?;
         Ok(opcode)
+    }
+
+    fn fetch_prefixed_byte(&mut self) -> Result<PrefixedOpcode, &'static str> {
+        println!("pc = {:#04x}", self.reg.pc);
+        let b = self.memory_bus.read_byte(self.reg.pc.into());
+        println!("mem[pc] = {:#04x}", b);
+
+        let prefixed_opcode = PrefixedOpcode::try_from(b)?;
+        Ok(prefixed_opcode)
     }
 
     // TODO double-check cycles
@@ -1403,6 +1450,41 @@ impl CPU {
                 cycles = 1;
                 self.reg.pc += 1;
             },
+
+            Opcode::PREFIX => {
+                let prefixed_opcode = self.fetch_prefixed_byte().expect("failed fetching");
+
+                match prefixed_opcode {
+                    PrefixedOpcode::RLC(operand) => {
+                        match operand {
+                            RotateOperand::A => {
+                                todo!();
+                            },
+                            RotateOperand::B => {
+                                todo!();
+                            },
+                            RotateOperand::C => {
+                                todo!();
+                            },
+                            RotateOperand::D => {
+                                todo!();
+                            },
+                            RotateOperand::E => {
+                                todo!();
+                            },
+                            RotateOperand::H => {
+                                todo!();
+                            },
+                            RotateOperand::L => {
+                                todo!();
+                            },
+                            RotateOperand::HLIndirect => {
+                                todo!();
+                            },
+                        }
+                    },
+                }
+            }
         };
 
         println!("{} cycles", cycles);
