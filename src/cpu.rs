@@ -1082,6 +1082,7 @@ impl CPU {
                 }
             },
 
+            // TODO refactor
             Opcode::CALL(condition) => {
                 match condition  {
                     JCondition::Nothing => {
@@ -1090,36 +1091,227 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                        cycles = 6;
                     },
-                    JCondition::NZ => todo!(),
-                    JCondition::NC => todo!(),
-                    JCondition::Z => todo!(),
-                    JCondition::C => todo!(),
+                    JCondition::NZ => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                        if !self.reg.get_flag(Flag::Z) {
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            cycles = 6;
+                        } else {
+                            cycles = 3;
+                            self.reg.pc += 1;
+                        }
+                    },
+                    JCondition::NC => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                        if !self.reg.get_flag(Flag::C) {
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            cycles = 6;
+                        } else {
+                            cycles = 3;
+                            self.reg.pc += 1;
+                        }
+                    },
+                    JCondition::Z => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                        if self.reg.get_flag(Flag::Z) {
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            cycles = 6;
+                        } else {
+                            cycles = 3;
+                            self.reg.pc += 1;
+                        }
+                    },
+                    JCondition::C => {
+                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
+
+                        if self.reg.get_flag(Flag::C) {
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            cycles = 6;
+                        } else {
+                            cycles = 3;
+                            self.reg.pc += 1;
+                        }
+                    },
                 }
             }
 
+            // TODO refactor
             Opcode::RET(condition) => {
                 match condition {
-                    JCondition::Nothing => todo!(),
-                    JCondition::NZ => todo!(),
-                    JCondition::NC => todo!(),
-                    JCondition::Z => todo!(),
-                    JCondition::C => todo!(),
+                    JCondition::Nothing => {
+                        let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                        let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                        cycles = 4;
+                        self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                        self.reg.sp += 2;
+                    },
+                    JCondition::NZ => {
+                        if !self.reg.get_flag(Flag::Z) {
+                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                            cycles = 5;
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.sp += 2;
+                        } else {
+                            cycles = 2;
+                            self.reg.pc += 1;
+                        }
+                    }
+                    JCondition::NC => {
+                        if !self.reg.get_flag(Flag::C) {
+                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                            cycles = 5;
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.sp += 2;
+                        } else {
+                            cycles = 2;
+                            self.reg.pc += 1;
+                        }
+                    }
+                    JCondition::Z => {
+                        if self.reg.get_flag(Flag::Z) {
+                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                            cycles = 5;
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.sp += 2;
+                        } else {
+                            cycles = 2;
+                            self.reg.pc += 1;
+                        }
+                    }
+                    JCondition::C => {
+                        if self.reg.get_flag(Flag::C) {
+                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                            cycles = 5;
+                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.sp += 2;
+                        } else {
+                            cycles = 2;
+                            self.reg.pc += 1;
+                        }
+                    }
                 }
             }
 
-            Opcode::RETI => todo!(),
+            Opcode::RETI => {
+                let msb = self.memory_bus.read_byte(self.reg.sp + 2);
+                let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+
+                cycles = 4;
+                self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                self.reg.sp += 2;
+                self.IME = true;
+            },
 
             Opcode::RST(address) => {
                 match address {
-                    RSTAddress::X00 => todo!(),
-                    RSTAddress::X10 => todo!(),
-                    RSTAddress::X20 => todo!(),
-                    RSTAddress::X30 => todo!(),
-                    RSTAddress::X08 => todo!(),
-                    RSTAddress::X18 => todo!(),
-                    RSTAddress::X28 => todo!(),
-                    RSTAddress::X38 => todo!(),
+                    RSTAddress::X00 => {
+                        let n = 0x0000;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X10 => {
+                        let n = 0x0010;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X20 => {
+                        let n = 0x0020;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X30 => {
+                        let n = 0x0030;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X08 => {
+                        let n = 0x0008;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X18 => {
+                        let n = 0x0018;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X28 => {
+                        let n = 0x0028;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
+                    RSTAddress::X38 => {
+                        let n = 0x0038;
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+                        self.reg.pc = n;
+                    }
                 }
             }
 
