@@ -55,7 +55,6 @@ pub enum Opcode {
     RST(RSTAddress),
 
     DI,
-    STOP,
     HALT,
     EI,
 }
@@ -202,7 +201,7 @@ impl TryFrom<u8> for Opcode {
             0x0d => Ok(Opcode::DEC(IncDecTarget::C)),
             0x0e => Ok(Opcode::LD(LDType::Byte(LDTarget::C, LDSource::D8))),
             0x0f => Ok(Opcode::RRCA),
-            0x10 => Ok(Opcode::STOP),
+            // 0x10 STOP. Not used by commercial games.
             0x11 => Ok(Opcode::LD(LDType::Word(LDWordTarget::DE))),
             0x12 => Ok(Opcode::LD(LDType::IndirectFromA(Indirect::DEIndirect))),
             0x13 => Ok(Opcode::INC(IncDecTarget::DE)),
@@ -1316,9 +1315,7 @@ impl CPU {
                         self.reg.pc = n;
                     }
                 }
-            }
-
-            Opcode::STOP => todo!(),
+            },
 
             Opcode::HALT => {
                 // TODO handle interrupt state
