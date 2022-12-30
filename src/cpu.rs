@@ -10,6 +10,8 @@ pub struct CPU {
     pub memory_bus: MemoryBus,
     pub counter: i32,
     pub tmp_buffer: Vec<u8>,
+    // is this all we need for HALT?
+    running: bool,
     IME: bool,
 }
 
@@ -443,6 +445,7 @@ impl CPU {
             // TODO remove
             tmp_buffer: vec![1; 100],
             IME: true,
+            running: true,
         };
 
         // TODO error handling
@@ -1317,7 +1320,10 @@ impl CPU {
 
             Opcode::STOP => todo!(),
 
-            Opcode::HALT => todo!(),
+            Opcode::HALT => {
+                // TODO handle interrupt state
+                self.running = false;
+            },
 
             Opcode::PUSH(target) => {
                 self.reg.sp -= 1;
