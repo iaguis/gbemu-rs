@@ -2327,7 +2327,31 @@ impl CPU {
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     }
-                    PrefixedOpcode::BIT(_, _) => todo!(),
+                    PrefixedOpcode::BIT(operand, position) => {
+                        match operand {
+                            PrefixOperand::A => {
+                            },
+                            PrefixOperand::B => {
+                            },
+                            PrefixOperand::C => {
+                            },
+                            PrefixOperand::D => {
+                            },
+                            PrefixOperand::E => {
+                            },
+                            PrefixOperand::H => {
+                            },
+                            PrefixOperand::L => {
+                            },
+                            PrefixOperand::HLIndirect => {
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    }
                     PrefixedOpcode::RES(_, _) => todo!(),
                     PrefixedOpcode::SET(_, _) => todo!(),
 
