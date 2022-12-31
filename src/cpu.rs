@@ -1496,29 +1496,44 @@ impl CPU {
                     PrefixedOpcode::RLC(operand) => {
                         match operand {
                             RotateOperand::A => {
-                                todo!();
+                                let r = (self.reg.a << 1) | (self.reg.a >> 7);
+                                self.reg.a = r;
                             },
                             RotateOperand::B => {
-                                todo!();
+                                let r = (self.reg.b << 1) | (self.reg.b >> 7);
+                                self.reg.b = r;
                             },
                             RotateOperand::C => {
-                                todo!();
+                                let r = (self.reg.c << 1) | (self.reg.c >> 7);
+                                self.reg.c = r;
                             },
                             RotateOperand::D => {
-                                todo!();
+                                let r = (self.reg.d << 1) | (self.reg.d >> 7);
+                                self.reg.d = r;
                             },
                             RotateOperand::E => {
-                                todo!();
+                                let r = (self.reg.e << 1) | (self.reg.e >> 7);
+                                self.reg.e = r;
                             },
                             RotateOperand::H => {
-                                todo!();
+                                let r = (self.reg.h << 1) | (self.reg.h >> 7);
+                                self.reg.h = r;
                             },
                             RotateOperand::L => {
-                                todo!();
+                                let r = (self.reg.l << 1) | (self.reg.l >> 7);
+                                self.reg.l = r;
                             },
                             RotateOperand::HLIndirect => {
-                                todo!();
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let r = (val << 1) | (val >> 7);
+
+                                self.memory_bus.write_byte(self.reg.hl(), r);
                             },
+                        }
+
+                        match operand {
+                            RotateOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
                 }
