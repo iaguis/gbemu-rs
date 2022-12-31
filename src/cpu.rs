@@ -64,11 +64,21 @@ pub enum Opcode {
 #[repr(u8)]
 #[derive(Debug)]
 pub enum PrefixedOpcode {
-    RLC(RotateOperand),
+    RLC(PrefixOperand),
+    RRC(PrefixOperand),
+    RL(PrefixOperand),
+    RR(PrefixOperand),
+    SLA(PrefixOperand),
+    SRA(PrefixOperand),
+    SRL(PrefixOperand),
+    SWAP(PrefixOperand),
+    BIT(PrefixOperand, BitPosition),
+    RES(PrefixOperand, BitPosition),
+    SET(PrefixOperand, BitPosition),
 }
 
 #[derive(Debug)]
-pub enum RotateOperand {
+pub enum PrefixOperand {
     A,
     B,
     C,
@@ -77,6 +87,18 @@ pub enum RotateOperand {
     H,
     L,
     HLIndirect,
+}
+
+#[derive(Debug)]
+pub enum BitPosition {
+    B0,
+    B1,
+    B2,
+    B3,
+    B4,
+    B5,
+    B6,
+    B7
 }
 
 #[derive(Debug)]
@@ -460,14 +482,70 @@ impl TryFrom<u8> for PrefixedOpcode {
     type Error = &'static str;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
-            0x00 => Ok(PrefixedOpcode::RLC(RotateOperand::B)),
-            0x01 => Ok(PrefixedOpcode::RLC(RotateOperand::C)),
-            0x02 => Ok(PrefixedOpcode::RLC(RotateOperand::D)),
-            0x03 => Ok(PrefixedOpcode::RLC(RotateOperand::E)),
-            0x04 => Ok(PrefixedOpcode::RLC(RotateOperand::H)),
-            0x05 => Ok(PrefixedOpcode::RLC(RotateOperand::L)),
-            0x06 => Ok(PrefixedOpcode::RLC(RotateOperand::HLIndirect)),
-            0x07 => Ok(PrefixedOpcode::RLC(RotateOperand::A)),
+            0x00 => Ok(PrefixedOpcode::RLC(PrefixOperand::B)),
+            0x01 => Ok(PrefixedOpcode::RLC(PrefixOperand::C)),
+            0x02 => Ok(PrefixedOpcode::RLC(PrefixOperand::D)),
+            0x03 => Ok(PrefixedOpcode::RLC(PrefixOperand::E)),
+            0x04 => Ok(PrefixedOpcode::RLC(PrefixOperand::H)),
+            0x05 => Ok(PrefixedOpcode::RLC(PrefixOperand::L)),
+            0x06 => Ok(PrefixedOpcode::RLC(PrefixOperand::HLIndirect)),
+            0x07 => Ok(PrefixedOpcode::RLC(PrefixOperand::A)),
+            0x08 => Ok(PrefixedOpcode::RRC(PrefixOperand::B)),
+            0x09 => Ok(PrefixedOpcode::RRC(PrefixOperand::C)),
+            0x0a => Ok(PrefixedOpcode::RRC(PrefixOperand::D)),
+            0x0b => Ok(PrefixedOpcode::RRC(PrefixOperand::E)),
+            0x0c => Ok(PrefixedOpcode::RRC(PrefixOperand::H)),
+            0x0d => Ok(PrefixedOpcode::RRC(PrefixOperand::L)),
+            0x0e => Ok(PrefixedOpcode::RRC(PrefixOperand::HLIndirect)),
+            0x0f => Ok(PrefixedOpcode::RRC(PrefixOperand::A)),
+            0x10 => Ok(PrefixedOpcode::RL(PrefixOperand::B)),
+            0x11 => Ok(PrefixedOpcode::RL(PrefixOperand::C)),
+            0x12 => Ok(PrefixedOpcode::RL(PrefixOperand::D)),
+            0x13 => Ok(PrefixedOpcode::RL(PrefixOperand::E)),
+            0x14 => Ok(PrefixedOpcode::RL(PrefixOperand::H)),
+            0x15 => Ok(PrefixedOpcode::RL(PrefixOperand::L)),
+            0x16 => Ok(PrefixedOpcode::RL(PrefixOperand::HLIndirect)),
+            0x17 => Ok(PrefixedOpcode::RL(PrefixOperand::A)),
+            0x18 => Ok(PrefixedOpcode::RR(PrefixOperand::B)),
+            0x19 => Ok(PrefixedOpcode::RR(PrefixOperand::C)),
+            0x1a => Ok(PrefixedOpcode::RR(PrefixOperand::D)),
+            0x1b => Ok(PrefixedOpcode::RR(PrefixOperand::E)),
+            0x1c => Ok(PrefixedOpcode::RR(PrefixOperand::H)),
+            0x1d => Ok(PrefixedOpcode::RR(PrefixOperand::L)),
+            0x1e => Ok(PrefixedOpcode::RR(PrefixOperand::HLIndirect)),
+            0x1f => Ok(PrefixedOpcode::RR(PrefixOperand::A)),
+            0x20 => Ok(PrefixedOpcode::SLA(PrefixOperand::B)),
+            0x21 => Ok(PrefixedOpcode::SLA(PrefixOperand::C)),
+            0x22 => Ok(PrefixedOpcode::SLA(PrefixOperand::D)),
+            0x23 => Ok(PrefixedOpcode::SLA(PrefixOperand::E)),
+            0x24 => Ok(PrefixedOpcode::SLA(PrefixOperand::H)),
+            0x25 => Ok(PrefixedOpcode::SLA(PrefixOperand::L)),
+            0x26 => Ok(PrefixedOpcode::SLA(PrefixOperand::HLIndirect)),
+            0x27 => Ok(PrefixedOpcode::SLA(PrefixOperand::A)),
+            0x28 => Ok(PrefixedOpcode::SRA(PrefixOperand::B)),
+            0x29 => Ok(PrefixedOpcode::SRA(PrefixOperand::C)),
+            0x2a => Ok(PrefixedOpcode::SRA(PrefixOperand::D)),
+            0x2b => Ok(PrefixedOpcode::SRA(PrefixOperand::E)),
+            0x2c => Ok(PrefixedOpcode::SRA(PrefixOperand::H)),
+            0x2d => Ok(PrefixedOpcode::SRA(PrefixOperand::L)),
+            0x2e => Ok(PrefixedOpcode::SRA(PrefixOperand::HLIndirect)),
+            0x2f => Ok(PrefixedOpcode::SRA(PrefixOperand::A)),
+            0x30 => Ok(PrefixedOpcode::SWAP(PrefixOperand::B)),
+            0x31 => Ok(PrefixedOpcode::SWAP(PrefixOperand::C)),
+            0x32 => Ok(PrefixedOpcode::SWAP(PrefixOperand::D)),
+            0x33 => Ok(PrefixedOpcode::SWAP(PrefixOperand::E)),
+            0x34 => Ok(PrefixedOpcode::SWAP(PrefixOperand::H)),
+            0x35 => Ok(PrefixedOpcode::SWAP(PrefixOperand::L)),
+            0x36 => Ok(PrefixedOpcode::SWAP(PrefixOperand::HLIndirect)),
+            0x37 => Ok(PrefixedOpcode::SWAP(PrefixOperand::A)),
+            0x38 => Ok(PrefixedOpcode::SRL(PrefixOperand::B)),
+            0x39 => Ok(PrefixedOpcode::SRL(PrefixOperand::C)),
+            0x3a => Ok(PrefixedOpcode::SRL(PrefixOperand::D)),
+            0x3b => Ok(PrefixedOpcode::SRL(PrefixOperand::E)),
+            0x3c => Ok(PrefixedOpcode::SRL(PrefixOperand::H)),
+            0x3d => Ok(PrefixedOpcode::SRL(PrefixOperand::L)),
+            0x3e => Ok(PrefixedOpcode::SRL(PrefixOperand::HLIndirect)),
+            0x3f => Ok(PrefixedOpcode::SRL(PrefixOperand::A)),
             _ => Err("unknown prefixed opcode"),
         }
     }
@@ -1005,7 +1083,13 @@ impl CPU {
             }
 
             Opcode::RLCA => {
-                let r = (self.reg.a << 1) | (self.reg.a >> 7);
+                let c = (self.reg.a & 0x80) >> 7;
+                let r = self.reg.a.rotate_left(1) | c;
+
+                self.reg.set_flag(Flag::Z, false);
+                self.reg.set_flag(Flag::N, false);
+                self.reg.set_flag(Flag::H, false);
+                self.reg.set_flag(Flag::C, c == 0x01);
 
                 cycles = 1;
                 self.reg.a = r;
@@ -1026,7 +1110,12 @@ impl CPU {
             },
 
             Opcode::RRCA => {
-                let r = (self.reg.a >> 1) | (self.reg.a << 7);
+                let r = self.reg.a.rotate_right(1);
+
+                self.reg.set_flag(Flag::Z, false);
+                self.reg.set_flag(Flag::N, false);
+                self.reg.set_flag(Flag::H, false);
+                self.reg.set_flag(Flag::C, self.reg.a & 0x01 == 0x01);
 
                 cycles = 1;
                 self.reg.a = r;
@@ -1495,47 +1584,753 @@ impl CPU {
                 match prefixed_opcode {
                     PrefixedOpcode::RLC(operand) => {
                         match operand {
-                            RotateOperand::A => {
-                                let r = (self.reg.a << 1) | (self.reg.a >> 7);
+                            PrefixOperand::A => {
+                                let c = (self.reg.a & 0x80) >> 7;
+                                let r = self.reg.a.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.a = r;
                             },
-                            RotateOperand::B => {
-                                let r = (self.reg.b << 1) | (self.reg.b >> 7);
+                            PrefixOperand::B => {
+                                let c = (self.reg.b & 0x80) >> 7;
+                                let r = self.reg.b.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.b = r;
                             },
-                            RotateOperand::C => {
-                                let r = (self.reg.c << 1) | (self.reg.c >> 7);
+                            PrefixOperand::C => {
+                                let c = (self.reg.c & 0x80) >> 7;
+                                let r = self.reg.c.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.c = r;
                             },
-                            RotateOperand::D => {
-                                let r = (self.reg.d << 1) | (self.reg.d >> 7);
+                            PrefixOperand::D => {
+                                let c = (self.reg.d & 0x80) >> 7;
+                                let r = self.reg.d.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.d = r;
                             },
-                            RotateOperand::E => {
-                                let r = (self.reg.e << 1) | (self.reg.e >> 7);
+                            PrefixOperand::E => {
+                                let c = (self.reg.e & 0x80) >> 7;
+                                let r = self.reg.e.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.e = r;
                             },
-                            RotateOperand::H => {
-                                let r = (self.reg.h << 1) | (self.reg.h >> 7);
+                            PrefixOperand::H => {
+                                let c = (self.reg.h & 0x80) >> 7;
+                                let r = self.reg.h.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.h = r;
                             },
-                            RotateOperand::L => {
-                                let r = (self.reg.l << 1) | (self.reg.l >> 7);
+                            PrefixOperand::L => {
+                                let c = (self.reg.l & 0x80) >> 7;
+                                let r = self.reg.l.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
+
                                 self.reg.l = r;
                             },
-                            RotateOperand::HLIndirect => {
+                            PrefixOperand::HLIndirect => {
+                                let c = (self.reg.c & 0x80) >> 7;
                                 let val = self.memory_bus.read_byte(self.reg.hl());
-                                let r = (val << 1) | (val >> 7);
+                                let r = val.rotate_left(1) | c;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, c == 0x01);
 
                                 self.memory_bus.write_byte(self.reg.hl(), r);
                             },
                         }
 
                         match operand {
-                            RotateOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
+
+                    PrefixedOpcode::RRC(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let r = self.reg.a.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.a & 0x01 == 0x01);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let r = self.reg.b.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.b & 0x01 == 0x01);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let r = self.reg.c.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.c & 0x01 == 0x01);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let r = self.reg.d.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.d & 0x01 == 0x01);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let r = self.reg.e.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.e & 0x01 == 0x01);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let r = self.reg.h.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.h & 0x01 == 0x01);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let r = self.reg.l.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, self.reg.l & 0x01 == 0x01);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let r = val.rotate_right(1);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, val & 0x01 == 0x01);
+
+                                self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+
+                    PrefixedOpcode::RL(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.a << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.a) == 0x80);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.b << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.b) == 0x80);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.c << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.c) == 0x80);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.d << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.d) == 0x80);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.e << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.e) == 0x80);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.h << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.h) == 0x80);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = self.reg.l << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.l) == 0x80);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let r = (val >> 1) | (val << 7);
+
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                                let r = val << 1 | c;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & val) == 0x80);
+
+                                self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+
+                    PrefixedOpcode::RR(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.a >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.a) == 0x80);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.b >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.b) == 0x80);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.c >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.c) == 0x80);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.d >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.d) == 0x80);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.e >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.e) == 0x80);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.h >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.h) == 0x80);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | self.reg.l >> 1;
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.l) == 0x80);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                                let r = c | val >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & val) == 0x80);
+
+                                self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+
+                    PrefixedOpcode::SLA(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let r = self.reg.a << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.a) == 0x80);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let r = self.reg.b << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.b) == 0x80);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let r = self.reg.c << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.c) == 0x80);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let r = self.reg.d << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.d) == 0x80);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let r = self.reg.e << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.e) == 0x80);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let r = self.reg.h << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.h) == 0x80);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let r = self.reg.l << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & self.reg.l) == 0x80);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let r = val << 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x80 & val) == 0x80);
+
+                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+                    PrefixedOpcode::SRA(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let sign_bit = self.reg.a & 0x80;
+                                let r = sign_bit | self.reg.a >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.a) == 0x01);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let sign_bit = self.reg.b & 0x80;
+                                let r = sign_bit | self.reg.b >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.b) == 0x01);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let sign_bit = self.reg.c & 0x80;
+                                let r = sign_bit | self.reg.c >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.c) == 0x01);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let sign_bit = self.reg.d & 0x80;
+                                let r = sign_bit | self.reg.d >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.d) == 0x01);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let sign_bit = self.reg.e & 0x80;
+                                let r = sign_bit | self.reg.e >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.e) == 0x01);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let sign_bit = self.reg.h & 0x80;
+                                let r = sign_bit | self.reg.h >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.h) == 0x01);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let sign_bit = self.reg.l & 0x80;
+                                let r = sign_bit | self.reg.l >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.l) == 0x01);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let sign_bit = val & 0x80;
+                                let r = sign_bit | val >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & val) == 0x01);
+
+                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+                    PrefixedOpcode::SRL(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let r = self.reg.a >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.a) == 0x01);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let r = self.reg.b >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.b) == 0x01);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let r = self.reg.c >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.c) == 0x01);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let r = self.reg.d >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.d) == 0x01);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let r = self.reg.e >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.e) == 0x01);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let r = self.reg.h >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.h) == 0x01);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let r = self.reg.l >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & self.reg.l) == 0x01);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+                                let r = val >> 1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, (0x01 & val) == 0x01);
+
+                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+
+                    PrefixedOpcode::SWAP(operand) => {
+                        match operand {
+                            PrefixOperand::A => {
+                                let r = (self.reg.a << 4) | (self.reg.a >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.a = r;
+                            },
+                            PrefixOperand::B => {
+                                let r = (self.reg.b << 4) | (self.reg.b >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.b = r;
+                            },
+                            PrefixOperand::C => {
+                                let r = (self.reg.c << 4) | (self.reg.c >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.c = r;
+                            },
+                            PrefixOperand::D => {
+                                let r = (self.reg.d << 4) | (self.reg.d >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.d = r;
+                            },
+                            PrefixOperand::E => {
+                                let r = (self.reg.e << 4) | (self.reg.e >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.e = r;
+                            },
+                            PrefixOperand::H => {
+                                let r = (self.reg.h << 4) | (self.reg.h >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.h = r;
+                            },
+                            PrefixOperand::L => {
+                                let r = (self.reg.l << 4) | (self.reg.l >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                self.reg.l = r;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                let val = self.memory_bus.read_byte(self.reg.hl());
+
+                                let r = (val << 4) | (val >> 4);
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, false);
+                                self.reg.set_flag(Flag::C, false);
+
+                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    }
+                    PrefixedOpcode::BIT(_, _) => todo!(),
+                    PrefixedOpcode::RES(_, _) => todo!(),
+                    PrefixedOpcode::SET(_, _) => todo!(),
+
                 }
             }
         };
