@@ -1006,23 +1006,29 @@ impl CPU {
 
             Opcode::RLCA => {
                 let r = (self.reg.a << 1) | (self.reg.a >> 7);
+
+                cycles = 1;
                 self.reg.a = r;
+                self.reg.pc += 1;
             },
 
             Opcode::RLA => todo!(),
 
             Opcode::RRCA => {
                 let r = (self.reg.a >> 1) | (self.reg.a << 7);
+
+                cycles = 1;
                 self.reg.a = r;
+                self.reg.pc += 1;
             },
 
             Opcode::RRA => todo!(),
 
-            Opcode::CPL => { self.reg.alu_cpl(); },
+            Opcode::CPL => { self.reg.alu_cpl(); cycles = 1; self.reg.pc += 1; },
 
-            Opcode::CCF => { self.reg.alu_ccf(); },
+            Opcode::CCF => { self.reg.alu_ccf(); cycles = 1; self.reg.pc += 1; },
 
-            Opcode::SCF => { self.reg.alu_scf(); },
+            Opcode::SCF => { self.reg.alu_scf(); cycles = 1; self.reg.pc += 1; },
 
             Opcode::DAA => todo!(),
 
@@ -1296,6 +1302,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X10 => {
@@ -1305,6 +1312,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X20 => {
@@ -1314,6 +1322,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X30 => {
@@ -1323,6 +1332,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X08 => {
@@ -1332,6 +1342,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X18 => {
@@ -1341,6 +1352,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X28 => {
@@ -1350,6 +1362,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                     RSTAddress::X38 => {
@@ -1359,6 +1372,7 @@ impl CPU {
                         self.reg.sp -= 1;
                         self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
+                        cycles = 4;
                         self.reg.pc = n;
                     }
                 }
