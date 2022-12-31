@@ -1012,7 +1012,18 @@ impl CPU {
                 self.reg.pc += 1;
             },
 
-            Opcode::RLA => todo!(),
+            Opcode::RLA => {
+                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
+                let r = self.reg.a << 1 | c;
+                self.reg.set_flag(Flag::Z, r == 0);
+                self.reg.set_flag(Flag::N, false);
+                self.reg.set_flag(Flag::H, false);
+                self.reg.set_flag(Flag::C, (0x80 & self.reg.a) == 0x80);
+
+                cycles = 1;
+                self.reg.a = r;
+                self.reg.pc += 1;
+            },
 
             Opcode::RRCA => {
                 let r = (self.reg.a >> 1) | (self.reg.a << 7);
@@ -1022,7 +1033,18 @@ impl CPU {
                 self.reg.pc += 1;
             },
 
-            Opcode::RRA => todo!(),
+            Opcode::RRA => {
+                let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
+                let r = c | self.reg.a >> 1;
+                self.reg.set_flag(Flag::Z, r == 0);
+                self.reg.set_flag(Flag::N, false);
+                self.reg.set_flag(Flag::H, false);
+                self.reg.set_flag(Flag::C, (0x01 & self.reg.a) == 0x01);
+
+                cycles = 1;
+                self.reg.a = r;
+                self.reg.pc += 1;
+            },
 
             Opcode::CPL => { self.reg.alu_cpl(); cycles = 1; self.reg.pc += 1; },
 
