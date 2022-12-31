@@ -1455,12 +1455,14 @@ impl CPU {
 
             Opcode::DI => {
                 self.IME = false;
+
                 cycles = 1;
                 self.reg.pc += 1;
             },
 
             Opcode::EI => {
                 self.IME = true;
+
                 cycles = 1;
                 self.reg.pc += 1;
             },
