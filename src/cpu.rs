@@ -546,6 +546,198 @@ impl TryFrom<u8> for PrefixedOpcode {
             0x3d => Ok(PrefixedOpcode::SRL(PrefixOperand::L)),
             0x3e => Ok(PrefixedOpcode::SRL(PrefixOperand::HLIndirect)),
             0x3f => Ok(PrefixedOpcode::SRL(PrefixOperand::A)),
+            0x40 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B0)),
+            0x41 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B0)),
+            0x42 => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B0)),
+            0x43 => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B0)),
+            0x44 => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B0)),
+            0x45 => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B0)),
+            0x46 => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B0)),
+            0x47 => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B0)),
+            0x48 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B1)),
+            0x49 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B1)),
+            0x4a => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B1)),
+            0x4b => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B1)),
+            0x4c => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B1)),
+            0x4d => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B1)),
+            0x4e => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B1)),
+            0x4f => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B1)),
+            0x50 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B2)),
+            0x51 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B2)),
+            0x52 => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B2)),
+            0x53 => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B2)),
+            0x54 => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B2)),
+            0x55 => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B2)),
+            0x56 => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B2)),
+            0x57 => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B2)),
+            0x58 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B3)),
+            0x59 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B3)),
+            0x5a => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B3)),
+            0x5b => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B3)),
+            0x5c => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B3)),
+            0x5d => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B3)),
+            0x5e => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B3)),
+            0x5f => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B3)),
+            0x60 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B4)),
+            0x61 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B4)),
+            0x62 => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B4)),
+            0x63 => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B4)),
+            0x64 => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B4)),
+            0x65 => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B4)),
+            0x66 => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B4)),
+            0x67 => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B4)),
+            0x68 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B5)),
+            0x69 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B5)),
+            0x6a => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B5)),
+            0x6b => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B5)),
+            0x6c => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B5)),
+            0x6d => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B5)),
+            0x6e => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B5)),
+            0x6f => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B5)),
+            0x70 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B6)),
+            0x71 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B6)),
+            0x72 => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B6)),
+            0x73 => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B6)),
+            0x74 => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B6)),
+            0x75 => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B6)),
+            0x76 => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B6)),
+            0x77 => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B6)),
+            0x78 => Ok(PrefixedOpcode::BIT(PrefixOperand::B, BitPosition::B7)),
+            0x79 => Ok(PrefixedOpcode::BIT(PrefixOperand::C, BitPosition::B7)),
+            0x7a => Ok(PrefixedOpcode::BIT(PrefixOperand::D, BitPosition::B7)),
+            0x7b => Ok(PrefixedOpcode::BIT(PrefixOperand::E, BitPosition::B7)),
+            0x7c => Ok(PrefixedOpcode::BIT(PrefixOperand::H, BitPosition::B7)),
+            0x7d => Ok(PrefixedOpcode::BIT(PrefixOperand::L, BitPosition::B7)),
+            0x7e => Ok(PrefixedOpcode::BIT(PrefixOperand::HLIndirect, BitPosition::B7)),
+            0x7f => Ok(PrefixedOpcode::BIT(PrefixOperand::A, BitPosition::B7)),
+            0x80 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B0)),
+            0x81 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B0)),
+            0x82 => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B0)),
+            0x83 => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B0)),
+            0x84 => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B0)),
+            0x85 => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B0)),
+            0x86 => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B0)),
+            0x87 => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B0)),
+            0x88 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B1)),
+            0x89 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B1)),
+            0x8a => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B1)),
+            0x8b => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B1)),
+            0x8c => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B1)),
+            0x8d => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B1)),
+            0x8e => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B1)),
+            0x8f => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B1)),
+            0x90 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B2)),
+            0x91 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B2)),
+            0x92 => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B2)),
+            0x93 => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B2)),
+            0x94 => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B2)),
+            0x95 => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B2)),
+            0x96 => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B2)),
+            0x97 => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B2)),
+            0x98 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B3)),
+            0x99 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B3)),
+            0x9a => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B3)),
+            0x9b => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B3)),
+            0x9c => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B3)),
+            0x9d => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B3)),
+            0x9e => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B3)),
+            0x9f => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B3)),
+            0xa0 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B4)),
+            0xa1 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B4)),
+            0xa2 => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B4)),
+            0xa3 => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B4)),
+            0xa4 => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B4)),
+            0xa5 => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B4)),
+            0xa6 => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B4)),
+            0xa7 => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B4)),
+            0xa8 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B5)),
+            0xa9 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B5)),
+            0xaa => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B5)),
+            0xab => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B5)),
+            0xac => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B5)),
+            0xad => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B5)),
+            0xae => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B5)),
+            0xaf => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B5)),
+            0xb0 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B6)),
+            0xb1 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B6)),
+            0xb2 => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B6)),
+            0xb3 => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B6)),
+            0xb4 => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B6)),
+            0xb5 => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B6)),
+            0xb6 => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B6)),
+            0xb7 => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B6)),
+            0xb8 => Ok(PrefixedOpcode::RES(PrefixOperand::B, BitPosition::B7)),
+            0xb9 => Ok(PrefixedOpcode::RES(PrefixOperand::C, BitPosition::B7)),
+            0xba => Ok(PrefixedOpcode::RES(PrefixOperand::D, BitPosition::B7)),
+            0xbb => Ok(PrefixedOpcode::RES(PrefixOperand::E, BitPosition::B7)),
+            0xbc => Ok(PrefixedOpcode::RES(PrefixOperand::H, BitPosition::B7)),
+            0xbd => Ok(PrefixedOpcode::RES(PrefixOperand::L, BitPosition::B7)),
+            0xbe => Ok(PrefixedOpcode::RES(PrefixOperand::HLIndirect, BitPosition::B7)),
+            0xbf => Ok(PrefixedOpcode::RES(PrefixOperand::A, BitPosition::B7)),
+            0xc0 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B0)),
+            0xc1 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B0)),
+            0xc2 => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B0)),
+            0xc3 => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B0)),
+            0xc4 => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B0)),
+            0xc5 => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B0)),
+            0xc6 => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B0)),
+            0xc7 => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B0)),
+            0xc8 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B1)),
+            0xc9 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B1)),
+            0xca => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B1)),
+            0xcb => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B1)),
+            0xcc => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B1)),
+            0xcd => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B1)),
+            0xce => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B1)),
+            0xcf => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B1)),
+            0xd0 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B2)),
+            0xd1 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B2)),
+            0xd2 => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B2)),
+            0xd3 => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B2)),
+            0xd4 => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B2)),
+            0xd5 => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B2)),
+            0xd6 => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B2)),
+            0xd7 => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B2)),
+            0xd8 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B3)),
+            0xd9 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B3)),
+            0xda => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B3)),
+            0xdb => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B3)),
+            0xdc => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B3)),
+            0xdd => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B3)),
+            0xde => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B3)),
+            0xdf => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B3)),
+            0xe0 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B4)),
+            0xe1 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B4)),
+            0xe2 => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B4)),
+            0xe3 => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B4)),
+            0xe4 => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B4)),
+            0xe5 => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B4)),
+            0xe6 => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B4)),
+            0xe7 => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B4)),
+            0xe8 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B5)),
+            0xe9 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B5)),
+            0xea => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B5)),
+            0xeb => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B5)),
+            0xec => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B5)),
+            0xed => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B5)),
+            0xee => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B5)),
+            0xef => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B5)),
+            0xf0 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B6)),
+            0xf1 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B6)),
+            0xf2 => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B6)),
+            0xf3 => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B6)),
+            0xf4 => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B6)),
+            0xf5 => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B6)),
+            0xf6 => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B6)),
+            0xf7 => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B6)),
+            0xf8 => Ok(PrefixedOpcode::SET(PrefixOperand::B, BitPosition::B7)),
+            0xf9 => Ok(PrefixedOpcode::SET(PrefixOperand::C, BitPosition::B7)),
+            0xfa => Ok(PrefixedOpcode::SET(PrefixOperand::D, BitPosition::B7)),
+            0xfb => Ok(PrefixedOpcode::SET(PrefixOperand::E, BitPosition::B7)),
+            0xfc => Ok(PrefixedOpcode::SET(PrefixOperand::H, BitPosition::B7)),
+            0xfd => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B7)),
+            0xfe => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B7)),
+            0xff => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B7)),
             _ => Err("unknown prefixed opcode"),
         }
     }
@@ -1846,8 +2038,6 @@ impl CPU {
                             },
                             PrefixOperand::HLIndirect => {
                                 let val = self.memory_bus.read_byte(self.reg.hl());
-                                let r = (val >> 1) | (val << 7);
-
                                 let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
                                 let r = val << 1 | c;
                                 self.reg.set_flag(Flag::Z, r == 0);
@@ -2038,7 +2228,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::H, false);
                                 self.reg.set_flag(Flag::C, (0x80 & val) == 0x80);
 
-                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                                self.memory_bus.write_byte(self.reg.hl(), r);
                             },
                         }
 
@@ -2136,7 +2326,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::H, false);
                                 self.reg.set_flag(Flag::C, (0x01 & val) == 0x01);
 
-                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                                self.memory_bus.write_byte(self.reg.hl(), r);
                             },
                         }
 
@@ -2226,7 +2416,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::H, false);
                                 self.reg.set_flag(Flag::C, (0x01 & val) == 0x01);
 
-                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                                self.memory_bus.write_byte(self.reg.hl(), r);
                             },
                         }
 
@@ -2328,22 +2518,92 @@ impl CPU {
                         }
                     }
                     PrefixedOpcode::BIT(operand, position) => {
+                        let &reg;
+                        let hl_byte = self.memory_bus.read_byte(self.reg.hl());
+
                         match operand {
                             PrefixOperand::A => {
+                                reg = &self.reg.a;
                             },
                             PrefixOperand::B => {
+                                reg = &self.reg.b;
                             },
                             PrefixOperand::C => {
+                                reg = &self.reg.c;
                             },
                             PrefixOperand::D => {
+                                reg = &self.reg.d;
                             },
                             PrefixOperand::E => {
+                                reg = &self.reg.e;
                             },
                             PrefixOperand::H => {
+                                reg = &self.reg.h;
                             },
                             PrefixOperand::L => {
+                                reg = &self.reg.l;
                             },
                             PrefixOperand::HLIndirect => {
+                                reg = &hl_byte;
+                            },
+                        }
+
+                        match position {
+                            BitPosition::B0 => {
+                                let r = *reg & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B1 => {
+                                let r = (*reg >> 1) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B2 => {
+                                let r = (*reg >> 2) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B3 => {
+                                let r = (*reg >> 3) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B4 => {
+                                let r = (*reg >> 4) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B5 => {
+                                let r = (*reg >> 5) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B6 => {
+                                let r = (*reg >> 6) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
+                            },
+                            BitPosition::B7 => {
+                                let r = (*reg >> 7) & 0b1;
+
+                                self.reg.set_flag(Flag::Z, r == 0);
+                                self.reg.set_flag(Flag::N, false);
+                                self.reg.set_flag(Flag::H, true);
                             },
                         }
 
@@ -2352,8 +2612,132 @@ impl CPU {
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     }
-                    PrefixedOpcode::RES(_, _) => todo!(),
-                    PrefixedOpcode::SET(_, _) => todo!(),
+                    PrefixedOpcode::RES(operand, position) => {
+                        let reg: &mut u8;
+                        let mut hl_byte = self.memory_bus.read_byte(self.reg.hl());
+
+                        match operand {
+                            PrefixOperand::A => {
+                                reg = &mut self.reg.a;
+                            },
+                            PrefixOperand::B => {
+                                reg = &mut self.reg.b;
+                            },
+                            PrefixOperand::C => {
+                                reg = &mut self.reg.c;
+                            },
+                            PrefixOperand::D => {
+                                reg = &mut self.reg.d;
+                            },
+                            PrefixOperand::E => {
+                                reg = &mut self.reg.e;
+                            },
+                            PrefixOperand::H => {
+                                reg = &mut self.reg.h;
+                            },
+                            PrefixOperand::L => {
+                                reg = &mut self.reg.l;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                reg = &mut hl_byte;
+                            },
+                        }
+
+                        match position {
+                            BitPosition::B0 => {
+                                *reg = *reg % !0b1;
+                            },
+                            BitPosition::B1 => {
+                                *reg = *reg & !(0b1 << 1);
+                            },
+                            BitPosition::B2 => {
+                                *reg = *reg & !(0b1 << 2);
+                            },
+                            BitPosition::B3 => {
+                                *reg = *reg & !(0b1 << 3);
+                            },
+                            BitPosition::B4 => {
+                                *reg = *reg & !(0b1 << 4);
+                            },
+                            BitPosition::B5 => {
+                                *reg = *reg & !(0b1 << 5);
+                            },
+                            BitPosition::B6 => {
+                                *reg = *reg & !(0b1 << 6);
+                            },
+                            BitPosition::B7 => {
+                                *reg = *reg & !(0b1 << 7);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
+                    PrefixedOpcode::SET(operand, position) => {
+                        let reg: &mut u8;
+                        let mut hl_byte = self.memory_bus.read_byte(self.reg.hl());
+
+                        match operand {
+                            PrefixOperand::A => {
+                                reg = &mut self.reg.a;
+                            },
+                            PrefixOperand::B => {
+                                reg = &mut self.reg.b;
+                            },
+                            PrefixOperand::C => {
+                                reg = &mut self.reg.c;
+                            },
+                            PrefixOperand::D => {
+                                reg = &mut self.reg.d;
+                            },
+                            PrefixOperand::E => {
+                                reg = &mut self.reg.e;
+                            },
+                            PrefixOperand::H => {
+                                reg = &mut self.reg.h;
+                            },
+                            PrefixOperand::L => {
+                                reg = &mut self.reg.l;
+                            },
+                            PrefixOperand::HLIndirect => {
+                                reg = &mut hl_byte;
+                            },
+                        }
+
+                        match position {
+                            BitPosition::B0 => {
+                                *reg = *reg | 0b1;
+                            },
+                            BitPosition::B1 => {
+                                *reg = *reg | (0b1 << 1);
+                            },
+                            BitPosition::B2 => {
+                                *reg = *reg | (0b1 << 2);
+                            },
+                            BitPosition::B3 => {
+                                *reg = *reg | (0b1 << 3);
+                            },
+                            BitPosition::B4 => {
+                                *reg = *reg | (0b1 << 4);
+                            },
+                            BitPosition::B5 => {
+                                *reg = *reg | (0b1 << 5);
+                            },
+                            BitPosition::B6 => {
+                                *reg = *reg | (0b1 << 6);
+                            },
+                            BitPosition::B7 => {
+                                *reg = *reg | (0b1 << 7);
+                            },
+                        }
+
+                        match operand {
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            _ => { cycles = 2; self.reg.pc += 1; },
+                        }
+                    },
 
                 }
             }
