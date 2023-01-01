@@ -1113,11 +1113,15 @@ impl CPU {
                         self.reg.alu_addhl(self.reg.sp);
                     },
                 }
+                cycles = 2;
+                self.reg.pc += 1;
             },
 
             Opcode::ADDSP => {
                 let val = self.memory_bus.read_byte(self.reg.pc + 1);
                 self.reg.alu_addsp(val);
+                cycles = 5;
+                self.reg.pc += 2;
             },
 
             Opcode::ADC(operand) => {
