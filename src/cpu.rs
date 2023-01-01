@@ -1333,7 +1333,36 @@ impl CPU {
 
             Opcode::SCF => { self.reg.alu_scf(); cycles = 1; self.reg.pc += 1; },
 
-            Opcode::DAA => todo!(),
+            Opcode::DAA => {
+                let mut a = self.reg.a;
+                let c = self.reg.get_flag(Flag::C);
+                let h = self.reg.get_flag(Flag::H);
+                let n = self.reg.get_flag(Flag::N);
+
+                if n {
+                    if c || a > 0x99 {
+                        a = a.wrapping_add(0x60);
+                        self.reg.set_flag(Flag::C, true);
+                    }
+                    if h || (a & 0x0f) > 0x09 {
+                        a = a.wrapping_add(0x6);
+                    }
+                } else {
+                    if c {
+                        a -= 0x60;
+                    }
+                    if h {
+                        a -= 0x6;
+                    }
+                }
+
+                self.reg.set_flag(Flag::Z, a == 0);
+                self.reg.set_flag(Flag::H, false);
+
+                cycles = 1;
+                self.reg.a = a;
+                self.reg.pc += 1;
+            },
 
             Opcode::JP(condition) => {
                 let msb = self.memory_bus.read_byte(self.reg.pc + 2);
