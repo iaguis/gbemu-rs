@@ -6,6 +6,7 @@ mod memory;
 mod memory_bus;
 mod cpu;
 mod gpu;
+mod io;
 
 use cpu::CPU;
 

@@ -2,9 +2,11 @@ use std::{io,fs};
 
 use crate::memory::Memory;
 use crate::gpu::GPU;
+use crate::io::IO;
 
 pub struct MemoryBus {
     memory: Memory,
+    io: IO,
     gpu: GPU,
 }
 
@@ -13,6 +15,7 @@ impl MemoryBus {
         MemoryBus {
             memory: Memory::new(),
             gpu: GPU::new(),
+            io: IO::new(),
         }
     }
 
@@ -25,6 +28,7 @@ impl MemoryBus {
             0..=0x7FFF => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
             0xC000..=0xDFFF => self.memory.read_byte(address),
+            0xFF00..=0xFF7F => self.io.read_byte(address),
             // FIXME
             _ => panic!("bad address"),
         }
