@@ -1804,6 +1804,7 @@ impl CPU {
             },
 
             Opcode::PREFIX => {
+                self.reg.pc += 1;
                 let prefixed_opcode = self.fetch_prefixed_byte().expect("failed fetching");
 
                 match prefixed_opcode {
