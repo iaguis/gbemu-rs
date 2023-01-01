@@ -1,5 +1,6 @@
 use std::time;
 use std::thread;
+use std::env;
 
 mod registers;
 mod memory;
@@ -7,6 +8,7 @@ mod memory_bus;
 mod cpu;
 mod gpu;
 mod io;
+mod debug;
 
 use cpu::CPU;
 
@@ -20,9 +22,9 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new() -> Emulator {
+    pub fn new(config: Config) -> Emulator {
         Emulator {
-            cpu: CPU::new(),
+            cpu: CPU::new(config.rom_path, config.debug),
             window: minifb::Window::new(
                 "gbemu-rs",
                 160,
@@ -53,5 +55,29 @@ impl Emulator {
                 thread::sleep(time::Duration::from_nanos(2));
             }
         }
+    }
+}
+
+pub struct Config {
+    pub rom_path: String,
+    pub debug: bool,
+}
+
+impl Config {
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        // program name
+        args.next();
+
+        let rom_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("missing rom path"),
+        };
+
+        let debug = env::var("GBEMU_RS_DEBUG").is_ok();
+
+        Ok(Config {
+            rom_path,
+            debug,
+        })
     }
 }

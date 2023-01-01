@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 minifb = "0.23.0"
+rustyline = "10.0.0"
+rustyline-derive = "0.7.0"

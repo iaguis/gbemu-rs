@@ -1,18 +1,21 @@
-use std::thread;
-use std::time;
 use std::fs::File;
 
 use crate::registers::{Flag,Registers};
 use crate::memory_bus::MemoryBus;
+
+use crate::debug;
 
 pub struct CPU {
     pub reg: Registers,
     pub memory_bus: MemoryBus,
     pub counter: i32,
     pub tmp_buffer: Vec<u8>,
+    pub breakpoints: Vec<u16>,
     // is this all we need for HALT?
     running: bool,
     IME: bool,
+    debug: bool,
+    stepping: bool,
 }
 
 #[repr(u8)]
@@ -738,45 +741,56 @@ impl TryFrom<u8> for PrefixedOpcode {
             0xfd => Ok(PrefixedOpcode::SET(PrefixOperand::L, BitPosition::B7)),
             0xfe => Ok(PrefixedOpcode::SET(PrefixOperand::HLIndirect, BitPosition::B7)),
             0xff => Ok(PrefixedOpcode::SET(PrefixOperand::A, BitPosition::B7)),
-            _ => Err("unknown prefixed opcode"),
         }
     }
 }
 
 impl CPU {
-    pub fn new() -> CPU {
+    pub fn new(rom_path: String, debug: bool) -> CPU {
         let mut cpu = CPU {
             reg: Registers::new(),
             counter: 20,
             memory_bus: MemoryBus::new(),
             // TODO remove
             tmp_buffer: vec![1; 100],
+            breakpoints: vec![],
             IME: true,
             running: true,
+            debug: debug,
+            stepping: false,
         };
+
+        cpu.breakpoints.push(0x100);
 
         // TODO error handling
 
         // FIXME pass this from main
-        let f = File::open("/home/iaguis/programming/gameboy/cpu_instrs/cpu_instrs.gb").expect("can't open ROM");
+        let f = File::open(rom_path).expect("can't open ROM");
         cpu.memory_bus.read_rom(f).expect("can't read ROM");
 
         cpu
     }
 
+    #[inline(always)]
+    fn log_debug(&self, message: String) {
+        if self.debug {
+            eprintln!("{message}");
+        }
+    }
+
     fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
-        println!("pc = {:#04x}", self.reg.pc);
         let b = self.memory_bus.read_byte(self.reg.pc.into());
-        println!("mem[pc] = {:#04x}", b);
+        self.log_debug(format!("pc = {:#04x}", self.reg.pc));
+        self.log_debug(format!("mem[pc] = {:#04x}", b));
 
         let opcode = Opcode::try_from(b)?;
         Ok(opcode)
     }
 
     fn fetch_prefixed_byte(&mut self) -> Result<PrefixedOpcode, &'static str> {
-        println!("pc = {:#04x}", self.reg.pc);
         let b = self.memory_bus.read_byte(self.reg.pc.into());
-        println!("mem[pc] = {:#04x}", b);
+        self.log_debug(format!("pc = {:#04x}", self.reg.pc));
+        self.log_debug(format!("mem[pc] = {:#04x}", b));
 
         let prefixed_opcode = PrefixedOpcode::try_from(b)?;
         Ok(prefixed_opcode)
@@ -787,12 +801,24 @@ impl CPU {
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
 
+        if self.debug && (self.breakpoints.contains(&self.reg.pc)
+        | self.stepping) {
+            let r = debug::drop_to_shell(self);
+            match r {
+                Ok(ret) => match ret {
+                    debug::DebuggerRet::Step => self.stepping = true,
+                    _ => self.stepping = false,
+                }
+                Err(_) => panic!("error dropping to shell!"),
+            }
+        }
+
         let mut cycles = 1;
 
-        println!("opcode: {:?}", opcode);
+        self.log_debug(format!("opcode: {:?}", opcode));
+
         match opcode {
             Opcode::NOP => {
-                println!("nop, sleeping 1s");
                 cycles = 1;
                 self.reg.pc += 1;
             },
@@ -908,8 +934,6 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
                         let address = ((msb as u16) << 8) | lsb as u16;
 
-                        println!("address {:#04x}", address);
-
                         self.memory_bus.write_byte(address, self.reg.a);
 
                         cycles = 4;
@@ -920,8 +944,6 @@ impl CPU {
                         let msb = self.memory_bus.read_byte(self.reg.pc + 2);
                         let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
                         let address = ((msb as u16) << 8) | lsb as u16;
-
-                        println!("address {:#04x}", address);
 
                         self.reg.a = self.memory_bus.read_byte(address);
 
@@ -2542,7 +2564,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::H, false);
                                 self.reg.set_flag(Flag::C, false);
 
-                                let val = self.memory_bus.write_byte(self.reg.hl(), r);
+                                self.memory_bus.write_byte(self.reg.hl(), r);
                             },
                         }
 
@@ -2777,7 +2799,7 @@ impl CPU {
             }
         };
 
-        println!("{} cycles", cycles);
+        self.log_debug(format!("{} cycles", cycles));
         cycles
     }
 
@@ -2796,13 +2818,12 @@ impl CPU {
         let mut cycles_ran = 0;
 
         while self.counter > 0 {
-            println!("emulating...");
+            self.log_debug(format!("emulating..."));
 
             let cycles = self.execute();
 
             self.counter -= cycles as i32;
             cycles_to_run -= cycles as i32;
-            println!("self.counter = {}", cycles);
 
             cycles_ran += cycles as usize;
 
@@ -2813,7 +2834,7 @@ impl CPU {
             if self.counter <= 0 {
                 // TODO run interrupt tasks
                 self.counter = 20;
-                println!("running interrupts");
+                self.log_debug(format!("running interrupts"));
             }
         }
 

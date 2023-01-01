@@ -19,7 +19,7 @@ impl MemoryBus {
         }
     }
 
-    pub fn read_rom(&mut self, mut f: fs::File) -> io::Result<()> {
+    pub fn read_rom(&mut self, f: fs::File) -> io::Result<()> {
         self.memory.read_rom(f)
     }
 
