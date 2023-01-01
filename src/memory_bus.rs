@@ -22,7 +22,7 @@ impl MemoryBus {
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0..=0x7FFE => self.memory.read_byte(address),
+            0..=0x7FFF => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
             0xC000..=0xDFFF => self.memory.read_byte(address),
             // FIXME
