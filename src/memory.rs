@@ -2,21 +2,21 @@ use std::{io,fs};
 use std::io::Read;
 
 pub struct Memory {
-    pub rom_0: [u8; 0x3FFF],
-    pub rom_n: [u8; 0x3FFF],
-    ext_ram: [u8; 0x1FFF],
-    wram_0: [u8; 0xFFF],
-    wram_n: [u8; 0xFFF],
+    pub rom_0: [u8; 0x3FFF+1],
+    pub rom_n: [u8; 0x3FFF+1],
+    ext_ram: [u8; 0x1FFF+1],
+    wram_0: [u8; 0xFFF+1],
+    wram_n: [u8; 0xFFF+1],
 }
 
 impl Memory {
     pub fn new() -> Memory {
         Memory {
-            rom_0: [0; 0x3FFF],
-            rom_n: [0; 0x3FFF],
-            ext_ram: [0; 0x1FFF],
-            wram_0: [0; 0xFFF],
-            wram_n: [0; 0xFFF],
+            rom_0: [0; 0x3FFF+1],
+            rom_n: [0; 0x3FFF+1],
+            ext_ram: [0; 0x1FFF+1],
+            wram_0: [0; 0xFFF+1],
+            wram_n: [0; 0xFFF+1],
         }
     }
 
@@ -25,7 +25,7 @@ impl Memory {
             0..=0x3FFF => self.rom_0[address as usize],
             0x4000..=0x7FFF => self.rom_n[address as usize - 0x3FFF],
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000],
-            0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000 - 1],
+            0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000],
             _ => panic!("bad address"),
         }
     }
