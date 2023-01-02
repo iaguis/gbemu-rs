@@ -911,7 +911,6 @@ impl CPU {
                                 let address = ((msb as u16) << 8) | lsb as u16;
 
                                 self.memory_bus.write_byte(address, a);
-
                             }
                             Indirect::LastByteIndirect => {
                                 let c = self.reg.c as u16;
@@ -1045,7 +1044,7 @@ impl CPU {
                     },
                     IncDecTarget::HLIndirect => {
                         let val = self.memory_bus.read_byte(self.reg.hl());
-                        let r = self.reg.alu_dec(val);
+                        let r = self.reg.alu_inc(val);
                         self.memory_bus.write_byte(self.reg.hl(), r);
                     },
                 }
@@ -1116,8 +1115,11 @@ impl CPU {
                         self.reg.alu_add(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             },
 
             Opcode::ADDHL(operand) => {
@@ -1142,7 +1144,7 @@ impl CPU {
             Opcode::ADDSP => {
                 let val = self.memory_bus.read_byte(self.reg.pc + 1);
                 self.reg.alu_addsp(val);
-                cycles = 5;
+                cycles = 4;
                 self.reg.pc += 2;
             },
 
@@ -1164,8 +1166,11 @@ impl CPU {
                         self.reg.alu_adc(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             },
 
             Opcode::SUB(operand) => {
@@ -1186,8 +1191,11 @@ impl CPU {
                         self.reg.alu_sub(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::SBC(operand) => {
@@ -1208,8 +1216,11 @@ impl CPU {
                         self.reg.alu_sbc(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::AND(operand) => {
@@ -1230,8 +1241,11 @@ impl CPU {
                         self.reg.alu_and(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::XOR(operand) => {
@@ -1252,8 +1266,11 @@ impl CPU {
                         self.reg.alu_xor(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::OR(operand) => {
@@ -1274,8 +1291,11 @@ impl CPU {
                         self.reg.alu_or(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::CP(operand) => {
@@ -1296,8 +1316,11 @@ impl CPU {
                         self.reg.alu_cp(data);
                     },
                 }
-                cycles = 1;
-                self.reg.pc += 1;
+                match operand {
+                    ALUOperand::D8 => { cycles = 2; self.reg.pc += 2; },
+                    ALUOperand::HLIndirect => { cycles = 2; self.reg.pc += 1; },
+                    _ => { cycles = 1; self.reg.pc += 1; }
+                }
             }
 
             Opcode::RLCA => {
@@ -1365,7 +1388,7 @@ impl CPU {
                 let h = self.reg.get_flag(Flag::H);
                 let n = self.reg.get_flag(Flag::N);
 
-                if n {
+                if !n {
                     if c || a > 0x99 {
                         a = a.wrapping_add(0x60);
                         self.reg.set_flag(Flag::C, true);
@@ -1447,9 +1470,13 @@ impl CPU {
 
             Opcode::JR(condition) => {
                 let offset = self.memory_bus.read_byte(self.reg.pc + 1) as i8;
-                self.reg.pc += 1;
+                let next_instruction = self.reg.pc + 2;
 
-                let jp_address = (self.reg.pc + 1).wrapping_add(offset as u16);
+                let jp_address = if offset >= 0 {
+                    next_instruction.wrapping_add(offset as u16)
+                } else {
+                    next_instruction.wrapping_sub(offset.abs() as u16)
+                };
 
                 match condition {
                     JCondition::Nothing => {
@@ -1461,7 +1488,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 1;
+                            self.reg.pc += 2;
                             cycles = 3;
                         }
                     },
@@ -1470,7 +1497,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 1;
+                            self.reg.pc += 2;
                             cycles = 3;
                         }
                     },
@@ -1479,7 +1506,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 1;
+                            self.reg.pc += 2;
                             cycles = 3;
                         }
                     },
@@ -1488,7 +1515,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 1;
+                            self.reg.pc += 2;
                             cycles = 3;
                         }
                     },
@@ -1497,15 +1524,18 @@ impl CPU {
 
             // TODO refactor
             Opcode::CALL(condition) => {
+                let next_instruction = self.reg.pc + 3;
                 match condition  {
                     JCondition::Nothing => {
                         let msb = self.memory_bus.read_byte(self.reg.pc + 2);
                         let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
-                        self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
-                        self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
+                        self.reg.sp -= 1;
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
+
+                        self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                         cycles = 6;
                     },
                     JCondition::NZ => {
@@ -1514,14 +1544,15 @@ impl CPU {
 
                         if !self.reg.get_flag(Flag::Z) {
                             self.reg.sp -= 1;
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 1;
+                            self.reg.pc += 3;
                         }
                     },
                     JCondition::NC => {
@@ -1530,14 +1561,15 @@ impl CPU {
 
                         if !self.reg.get_flag(Flag::C) {
                             self.reg.sp -= 1;
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 1;
+                            self.reg.pc += 3;
                         }
                     },
                     JCondition::Z => {
@@ -1546,14 +1578,15 @@ impl CPU {
 
                         if self.reg.get_flag(Flag::Z) {
                             self.reg.sp -= 1;
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 1;
+                            self.reg.pc += 3;
                         }
                     },
                     JCondition::C => {
@@ -1562,14 +1595,15 @@ impl CPU {
 
                         if self.reg.get_flag(Flag::C) {
                             self.reg.sp -= 1;
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-                            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
+                            self.reg.sp -= 1;
+                            self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 1;
+                            self.reg.pc += 3;
                         }
                     },
                 }
@@ -1579,21 +1613,23 @@ impl CPU {
             Opcode::RET(condition) => {
                 match condition {
                     JCondition::Nothing => {
-                        let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                        let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                        let lsb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
+                        let msb = self.memory_bus.read_byte(self.reg.sp);
+                        self.reg.sp += 1;
 
                         cycles = 4;
-                        self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                        self.reg.sp += 2;
+                        self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                     },
                     JCondition::NZ => {
                         if !self.reg.get_flag(Flag::Z) {
-                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
+                            let msb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
 
                             cycles = 5;
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                            self.reg.sp += 2;
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                         } else {
                             cycles = 2;
                             self.reg.pc += 1;
@@ -1601,12 +1637,13 @@ impl CPU {
                     }
                     JCondition::NC => {
                         if !self.reg.get_flag(Flag::C) {
-                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
+                            let msb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
 
                             cycles = 5;
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                            self.reg.sp += 2;
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                         } else {
                             cycles = 2;
                             self.reg.pc += 1;
@@ -1614,12 +1651,13 @@ impl CPU {
                     }
                     JCondition::Z => {
                         if self.reg.get_flag(Flag::Z) {
-                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
+                            let msb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
 
                             cycles = 5;
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                            self.reg.sp += 2;
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                         } else {
                             cycles = 2;
                             self.reg.pc += 1;
@@ -1627,12 +1665,13 @@ impl CPU {
                     }
                     JCondition::C => {
                         if self.reg.get_flag(Flag::C) {
-                            let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                            let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                            let lsb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
+                            let msb = self.memory_bus.read_byte(self.reg.sp);
+                            self.reg.sp += 1;
 
                             cycles = 5;
-                            self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                            self.reg.sp += 2;
+                            self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                         } else {
                             cycles = 2;
                             self.reg.pc += 1;
@@ -1642,23 +1681,25 @@ impl CPU {
             }
 
             Opcode::RETI => {
-                let msb = self.memory_bus.read_byte(self.reg.sp + 2);
-                let lsb = self.memory_bus.read_byte(self.reg.sp + 1);
+                let lsb = self.memory_bus.read_byte(self.reg.sp);
+                self.reg.sp += 1;
+                let msb = self.memory_bus.read_byte(self.reg.sp);
+                self.reg.sp += 1;
 
                 cycles = 4;
-                self.reg.pc = ((msb as u16) << 8) | ((lsb as u16) & 0xFF);
-                self.reg.sp += 2;
+                self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
                 self.IME = true;
             },
 
             Opcode::RST(address) => {
+                let next_instruction = self.reg.pc + 1;
                 match address {
                     RSTAddress::X00 => {
                         let n = 0x0000;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1666,9 +1707,9 @@ impl CPU {
                     RSTAddress::X10 => {
                         let n = 0x0010;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1676,9 +1717,9 @@ impl CPU {
                     RSTAddress::X20 => {
                         let n = 0x0020;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1686,9 +1727,9 @@ impl CPU {
                     RSTAddress::X30 => {
                         let n = 0x0030;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1696,9 +1737,9 @@ impl CPU {
                     RSTAddress::X08 => {
                         let n = 0x0008;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1706,9 +1747,9 @@ impl CPU {
                     RSTAddress::X18 => {
                         let n = 0x0018;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1716,9 +1757,9 @@ impl CPU {
                     RSTAddress::X28 => {
                         let n = 0x0028;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1726,9 +1767,9 @@ impl CPU {
                     RSTAddress::X38 => {
                         let n = 0x0038;
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction >> 8) as u8);
                         self.reg.sp -= 1;
-                        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+                        self.memory_bus.write_byte(self.reg.sp, (next_instruction & 0xFF) as u8);
 
                         cycles = 4;
                         self.reg.pc = n;
@@ -1777,7 +1818,6 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.sp += 1;
                         self.reg.a = msb;
                         self.reg.f = lsb;
                     },
@@ -1785,7 +1825,6 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.sp += 1;
                         self.reg.a = msb;
                         self.reg.f = lsb;
                     },
@@ -1793,7 +1832,6 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.sp += 1;
                         self.reg.a = msb;
                         self.reg.f = lsb;
                     },
@@ -1801,11 +1839,11 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.sp += 1;
                         self.reg.a = msb;
                         self.reg.f = lsb;
                     },
                 }
+                self.reg.sp += 1;
 
                 cycles = 3;
                 self.reg.pc += 1;
