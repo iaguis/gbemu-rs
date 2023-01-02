@@ -26,15 +26,15 @@ impl Registers {
     pub fn new() -> Registers {
         // https://raw.githubusercontent.com/AntonioND/giibiiadvance/master/docs/TCAGBD.pdf page 10
         Registers {
-            a: 0x01,
+            a: 0,
             b: 0,
-            c: 0x13,
+            c: 0,
             d: 0,
-            e: 0xd8,
-            f: 0xb0,
-            h: 0x1,
-            l: 0x4d,
-            sp: 0xfffe,
+            e: 0,
+            f: 0,
+            h: 0,
+            l: 0,
+            sp: 0,
             pc: 0x100,
             m: 0,
             ticks: 0,
