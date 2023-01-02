@@ -32,8 +32,7 @@ impl Memory {
 
     pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0..=0x3FFE => self.rom_0[address as usize] = val,
-            0x3FFF..=0x7FFE => self.rom_n[address as usize - 0x3FFF] = val,
+            0..=0x7FFF => {},
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000] = val,
             0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000] = val,
             _ => panic!("bad address"),
