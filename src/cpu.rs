@@ -2855,24 +2855,18 @@ impl CPU {
         let mut cycles_to_run = CPU::calculate_cycles(duration);
         let mut cycles_ran = 0;
 
-        while self.counter > 0 {
+        println!("cycles_to_run: {}", cycles_to_run);
+
+        loop {
             self.log_debug(format!("emulating..."));
 
             let cycles = self.execute();
 
-            self.counter -= cycles as i32;
             cycles_to_run -= cycles as i32;
-
             cycles_ran += cycles as usize;
 
             if cycles_to_run <= 0 {
                 break;
-            }
-
-            if self.counter <= 0 {
-                // TODO run interrupt tasks
-                self.counter = 20;
-                self.log_debug(format!("running interrupts"));
             }
         }
 

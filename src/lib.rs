@@ -39,21 +39,8 @@ impl Emulator {
         let mut cycles_elapsed = 0usize;
         let mut now = time::Instant::now();
 
-        while self.window.is_open() && !self.window.is_key_down(minifb::Key::Escape) {
-            let delta = now.elapsed().subsec_nanos();
-            now = time::Instant::now();
-
-            cycles_elapsed += self.cpu.run(delta);
-            if cycles_elapsed >= ONE_FRAME_IN_CYCLES {
-                for (i, pixel) in self.cpu.pixel_buffer().enumerate() {
-                    window_buffer[i] = (*pixel) as u32;
-                }
-
-                self.window.update_with_buffer(&window_buffer[..], 160, 144).unwrap();
-                cycles_elapsed = 0;
-            } else {
-                thread::sleep(time::Duration::from_nanos(2));
-            }
+        loop {
+            self.cpu.run(std::u32::MAX);
         }
     }
 }
