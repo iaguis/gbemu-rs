@@ -23,6 +23,10 @@ impl MemoryBus {
         self.memory.read_rom(f)
     }
 
+    pub fn read_boot_rom(&mut self, f: fs::File) -> io::Result<()> {
+        self.memory.read_boot_rom(f)
+    }
+
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0..=0x7FFF => self.memory.read_byte(address),

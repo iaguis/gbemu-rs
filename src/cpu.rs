@@ -760,13 +760,16 @@ impl CPU {
             stepping: false,
         };
 
-        cpu.breakpoints.push(0x100);
+        cpu.breakpoints.push(0x0);
 
         // TODO error handling
 
         // FIXME pass this from main
-        let f = File::open(rom_path).expect("can't open ROM");
-        cpu.memory_bus.read_rom(f).expect("can't read ROM");
+        let boot_rom_path = "/home/iaguis/programming/gbemu-rs/DMG_ROM.bin";
+        let boot_rom_f = File::open(boot_rom_path).expect("can't open boot ROM");
+        cpu.memory_bus.read_boot_rom(boot_rom_f).expect("can't read ROM");
+        let rom_f = File::open(rom_path).expect("can't open ROM");
+        cpu.memory_bus.read_rom(rom_f).expect("can't read ROM");
 
         cpu
     }
