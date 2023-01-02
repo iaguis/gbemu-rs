@@ -135,7 +135,9 @@ pub fn drop_to_shell(cpu: &mut CPU) -> rustyline::Result<DebuggerRet> {
                     "c"|"continue" => { ret = DebuggerRet::Continue; break },
                     "b"|"bp"|"breakpoint" => {
                         if l_split.len() < 2 {
-                            println!("Usage: {} ADDRESS", l_split[0]);
+                            for i in 0..cpu.breakpoints.len() {
+                                println!("{}: {:#04x}", i, cpu.breakpoints[i]);
+                            }
                             continue;
                         }
 
@@ -150,6 +152,18 @@ pub fn drop_to_shell(cpu: &mut CPU) -> rustyline::Result<DebuggerRet> {
                             println!("Usage: {} REGISTER", l_split[0]);
                             continue;
                         }
+                    },
+                    "delete" => {
+                        if l_split.len() < 2 {
+                            cpu.breakpoints.clear();
+                            continue;
+                        }
+
+                        let bp_index = parse::<usize>(l_split[1]);
+                        match bp_index {
+                            Ok(idx) => cpu.breakpoints.remove(idx),
+                            Err(_) => { println!("bad number"); continue; },
+                        };
                     }
                     &_ => println!("{}: Command not found", line.as_str()),
                 }
