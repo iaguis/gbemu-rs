@@ -11,11 +11,18 @@ pub struct CPU {
     pub counter: i32,
     pub tmp_buffer: Vec<u8>,
     pub breakpoints: Vec<u16>,
+    pub clock: Clock,
+
     // is this all we need for HALT?
     is_halted: bool,
     IME: bool,
     debug: bool,
     stepping: bool,
+}
+
+pub struct Clock {
+    m: u32,
+    t: u32,
 }
 
 #[repr(u8)]
@@ -754,6 +761,10 @@ impl CPU {
             // TODO remove
             tmp_buffer: vec![1; 100],
             breakpoints: vec![],
+            clock: Clock {
+                m: 0,
+                t: 0,
+            },
             IME: true,
             is_halted: false,
             debug: debug,
@@ -2858,6 +2869,7 @@ impl CPU {
         (duration/1000).try_into().unwrap()
     }
 
+    // runs one frame
     pub fn run(&mut self, duration: u32) -> usize {
         let mut cycles_to_run = CPU::calculate_cycles(duration);
         let mut cycles_ran = 0;
@@ -2868,6 +2880,14 @@ impl CPU {
             self.log_debug(format!("emulating..."));
 
             let cycles = self.execute();
+
+            self.clock.m += cycles as u32;
+            // FIXME inefficient, but do we care?
+            self.clock.t += (cycles as u32) * 4;
+
+            let cycles_t = cycles * 4;
+
+            self.memory_bus.gpu.run(cycles_t.into());
 
             cycles_to_run -= cycles as i32;
             cycles_ran += cycles as usize;
