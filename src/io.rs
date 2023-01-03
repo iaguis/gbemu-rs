@@ -6,7 +6,7 @@ pub struct IO {
     div: u8,
     tima: u8,
     tma: u8,
-    tac: u8
+    tac: u8,
 }
 
 impl IO {
