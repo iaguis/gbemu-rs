@@ -31,7 +31,12 @@ impl IO {
             0xFF05 => self.tima,
             0xFF06 => self.tma,
             0xFF07 => self.tac,
-            _ => panic!("not implemented"),
+            0xFF10..=0xFF26 => { 0 /* TODO: audio */ },
+            0xFF27..=0xFF2F => { 0xFF /* TODO: audio */ },
+            0xFF30..=0xFF3F => { 0 /* TODO: audio */ },
+            0xFF40..=0xFF4B => { 0 /* TODO: display */ },
+            0xFF4C..=0xFF4E => { 0 /* ??? */ },
+            _ => { 0 /* TODO */ },
         }
     }
 
@@ -47,7 +52,12 @@ impl IO {
             0xFF05 => { self.tima = val },
             0xFF06 => { self.tma = val },
             0xFF07 => { self.tac = val },
-            _ => panic!("not implemented"),
+            0xFF10..=0xFF26 => { /* TODO: audio */ },
+            0xFF27..=0xFF2F => { },
+            0xFF30..=0xFF3F => { /* TODO: audio */ },
+            0xFF40..=0xFF4B => { /* TODO: display */ },
+            0xFF4C..=0xFF4E => { /* ??? */ },
+            _ => { /* TODO */ },
         }
     }
 }

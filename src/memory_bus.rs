@@ -32,6 +32,9 @@ impl MemoryBus {
             0..=0x7FFF => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
             0xC000..=0xDFFF => self.memory.read_byte(address),
+            0xE000..=0xFDFF => self.memory.read_byte(address - 0x2000),
+            0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
+            0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
             0xFF00..=0xFF4F | 0xFF51..=0xFF7F => self.io.read_byte(address),
             0xFF50 => {
                 if self.memory.expose_boot_rom {
@@ -40,7 +43,8 @@ impl MemoryBus {
                     1
                 }
             }
-            // FIXME
+            0xFF80..=0xFFFE => self.memory.read_byte(address),
+            0xFFFF => { 0 /* TODO Interrupt flag */ },
             _ => {
                 print!("reading {:#04x}: ", address);
                 panic!("bad address");
@@ -51,15 +55,20 @@ impl MemoryBus {
     // TODO return errors?
     pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0..=0x7FFE => self.memory.write_byte(address, val),
+            0..=0x7FFF => self.memory.write_byte(address, val),
             0x8000..=0x9FFF => self.gpu.write_byte(address, val),
             0xC000..=0xDFFF => self.memory.write_byte(address, val),
+            0xE000..=0xFDFF => { },
+            0xFE00..=0xFE9F => { /* TODO OAM */ },
+            0xFEA0..=0xFEFF => { /* Not Usable */ },
             0xFF00..=0xFF4F | 0xFF51..=0xFF7F => self.io.write_byte(address, val),
             0xFF50 => {
                 if val != 0 && self.memory.expose_boot_rom {
                     self.memory.expose_boot_rom = false;
                 }
             }
+            0xFF80..=0xFFFE => self.memory.write_byte(address, val),
+            0xFFFF => { /* TODO Interrupt flag */ },
             _ => {
                 print!("writing {:#04x}: ", address);
                 panic!("bad address");
