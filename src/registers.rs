@@ -10,9 +10,6 @@ pub struct Registers {
 
     pub sp: u16,
     pub pc: u16,
-
-    pub m: u8,
-    pub ticks: u32,
 }
 
 pub enum Flag {
@@ -36,8 +33,6 @@ impl Registers {
             l: 0,
             sp: 0,
             pc: 0,
-            m: 0,
-            ticks: 0,
         }
     }
 
