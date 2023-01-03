@@ -12,7 +12,7 @@ pub struct CPU {
     pub tmp_buffer: Vec<u8>,
     pub breakpoints: Vec<u16>,
     // is this all we need for HALT?
-    running: bool,
+    is_halted: bool,
     IME: bool,
     debug: bool,
     stepping: bool,
@@ -755,7 +755,7 @@ impl CPU {
             tmp_buffer: vec![1; 100],
             breakpoints: vec![],
             IME: true,
-            running: true,
+            is_halted: false,
             debug: debug,
             stepping: false,
         };
@@ -801,6 +801,10 @@ impl CPU {
 
     // TODO double-check cycles
     fn execute(&mut self) -> u8 {
+        if self.is_halted {
+            return 1;
+        }
+
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
 
@@ -1782,7 +1786,7 @@ impl CPU {
 
             Opcode::HALT => {
                 // TODO handle interrupt state
-                self.running = false;
+                self.is_halted = true;
             },
 
             Opcode::PUSH(target) => {
