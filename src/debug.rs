@@ -57,10 +57,10 @@ pub fn print_registers(cpu: &CPU) {
 }
 
 
-pub fn list_assembly(cpu: &CPU) {
-    for a in (cpu.reg.pc-6)..(cpu.reg.pc+6) {
+pub fn list_assembly(cpu: &CPU, address: u16) {
+    for a in (address-6)..(address+6) {
         let b = cpu.memory_bus.read_byte(a);
-        if a == cpu.reg.pc {
+        if a == address {
             print!("->");
         }
         print!("\t{:#04x}: {:#04x}", a, b);
@@ -131,7 +131,18 @@ pub fn drop_to_shell(cpu: &mut CPU) -> rustyline::Result<DebuggerRet> {
                         };
                     }
                     "s"|"step"|"next"|"n" => { ret = DebuggerRet::Step; break },
-                    "l"|"list" => list_assembly(cpu),
+                    "l"|"list" => {
+                        if l_split.len() < 2 {
+                            list_assembly(cpu, cpu.reg.pc);
+                            continue;
+                        }
+
+                        let address = parse::<u16>(l_split[1]);
+                        match address {
+                            Ok(a) => list_assembly(cpu, a),
+                            Err(_) => { println!("bad number"); continue; },
+                        };
+                    }
                     "c"|"continue" => { ret = DebuggerRet::Continue; break },
                     "b"|"bp"|"breakpoint" => {
                         if l_split.len() < 2 {
