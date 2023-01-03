@@ -7,7 +7,7 @@ use crate::io::IO;
 pub struct MemoryBus {
     memory: Memory,
     io: IO,
-    gpu: GPU,
+    pub gpu: GPU,
 }
 
 impl MemoryBus {
