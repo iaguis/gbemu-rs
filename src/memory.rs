@@ -8,6 +8,7 @@ pub struct Memory {
     ext_ram: [u8; 0x1FFF+1],
     wram_0: [u8; 0xFFF+1],
     wram_n: [u8; 0xFFF+1],
+    pub expose_boot_rom: bool,
 }
 
 impl Memory {
@@ -19,12 +20,13 @@ impl Memory {
             ext_ram: [0; 0x1FFF+1],
             wram_0: [0; 0xFFF+1],
             wram_n: [0; 0xFFF+1],
+            expose_boot_rom: true,
         }
     }
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0..=0xff => self.boot_rom[address as usize],
+            0..=0xff => { if self.expose_boot_rom { self.boot_rom[address as usize] } else { self.rom_0[address as usize] } },
             0x100..=0x3FFF => self.rom_0[address as usize],
             0x4000..=0x7FFF => self.rom_n[address as usize - 0x3FFF],
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000],
