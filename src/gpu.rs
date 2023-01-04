@@ -1,6 +1,5 @@
 const VIDEO_RAM_SIZE: usize = 0x1FFF;
-const VIEWPORT_PIXELS: usize = 256*256;
-const PIXELS: usize = 160*144;
+const VIEWPORT_PIXELS: usize = 160*144;
 
 #[derive(Clone,Copy)]
 pub struct Tile {
@@ -19,7 +18,6 @@ pub struct GPU {
     pub tile_set: [Tile; 384],
     pub video_ram: [u8; VIDEO_RAM_SIZE],
     pub canvas_buffer: [u8; VIEWPORT_PIXELS],
-    pub pixel_buffer: [u8; PIXELS],
 
     pub mode_clock: u32,
     pub mode: GPUMode,
@@ -39,7 +37,6 @@ impl GPU {
             tile_set: [Tile::new(); 384],
             video_ram: [0; VIDEO_RAM_SIZE],
             canvas_buffer: [0; VIEWPORT_PIXELS],
-            pixel_buffer: [255; PIXELS],
 
             mode_clock: 0,
             mode: GPUMode::OAMRead,
