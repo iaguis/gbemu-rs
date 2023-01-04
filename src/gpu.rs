@@ -4,13 +4,13 @@ const PIXELS: usize = 160*144;
 
 #[derive(Clone,Copy)]
 pub struct Tile {
-    data: [u8; 8*8],
+    data: [[u8; 8];8],
 }
 
 impl Tile {
     pub fn new() -> Tile {
         Tile {
-            data: [0; 8*8],
+            data: [[0; 8];8],
         }
     }
 }
@@ -98,6 +98,25 @@ impl GPU {
         }
     }
 
+    // GB has a weird way to store pixels. Each column has 2 bytes, and to get the tile pixel color
+    // (2 bits), the msb is from the second byte and the lsb is from the first byte.
+    fn update_tile(&mut self, address: usize) {
+        // base address
+        let address = address & 0x7FFF;
+        // address / 16 = tile index
+        let tile_idx = address >> 4;
+        let row_idx = address >> 1 & 0x7;
+
+        for col_idx in 0..8 {
+            let bit_index = 1 << (7 - col_idx);
+
+            let msb = if (self.video_ram[address+1] & bit_index) != 0 {1} else {0};
+            let lsb = if (self.video_ram[address] & bit_index) != 0 {1} else {0};
+
+            self.tile_set[tile_idx].data[row_idx][col_idx] = (msb << 1) | lsb
+        }
+    }
+
     fn render_scan(&self) { }
     fn write_pixels(&self) { }
 
@@ -110,9 +129,11 @@ impl GPU {
 
     pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0x8000..=0x9FFF => self.video_ram[address as usize - 0x8000] = val,
+            0x8000..=0x9FFF => {
+                self.video_ram[address as usize - 0x8000] = val;
+                self.update_tile(address as usize);
+            },
             _ => panic!("bad address"),
         }
     }
-
 }
