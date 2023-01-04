@@ -2864,22 +2864,15 @@ impl CPU {
         self.tmp_buffer.iter()
     }
 
-    fn calculate_cycles(duration: u32) -> i32 {
-        // XXX this might panic
-        (duration/1000).try_into().unwrap()
-    }
-
     // runs one frame
-    pub fn run(&mut self, duration: u32) -> usize {
-        let mut cycles_to_run = CPU::calculate_cycles(duration);
-        let mut cycles_ran = 0;
+    pub fn frame(&mut self) {
+        let frame_clock = self.clock.t + 70224;
 
-        println!("cycles_to_run: {}", cycles_to_run);
-
-        loop {
+        let mut cycles = 0;
+        while self.clock.t < frame_clock {
             self.log_debug(format!("emulating..."));
 
-            let cycles = self.execute();
+            cycles += self.execute();
 
             self.clock.m += cycles as u32;
             // FIXME inefficient, but do we care?
@@ -2888,15 +2881,6 @@ impl CPU {
             let cycles_t = cycles * 4;
 
             self.memory_bus.gpu.run(cycles_t.into());
-
-            cycles_to_run -= cycles as i32;
-            cycles_ran += cycles as usize;
-
-            if cycles_to_run <= 0 {
-                break;
-            }
         }
-
-        cycles_ran
     }
 }
