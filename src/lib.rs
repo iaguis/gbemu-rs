@@ -12,7 +12,7 @@ mod debug;
 
 use cpu::CPU;
 
-const NUMBER_OF_PIXELS: usize = 160*144;
+const NUMBER_OF_PIXELS: usize = 160*144 + 1;
 // TODO check
 const ONE_FRAME_IN_CYCLES: usize = 17556;
 
@@ -35,7 +35,7 @@ impl Emulator {
     }
 
     pub fn run(&mut self) {
-        let mut window_buffer: [u32; NUMBER_OF_PIXELS] = [0; NUMBER_OF_PIXELS];
+        let mut window_buffer: [u32; NUMBER_OF_PIXELS+1] = [0; NUMBER_OF_PIXELS+1];
         let mut cycles_elapsed = 0usize;
         let mut now = time::Instant::now();
 
@@ -43,7 +43,8 @@ impl Emulator {
             self.cpu.frame();
 
             for (i, pixel) in self.cpu.pixel_buffer().enumerate() {
-                window_buffer[i] = (*pixel) as u32;
+                println!("pixel = {}", *pixel);
+                window_buffer[i] = (*pixel);
             }
 
             self.window.update_with_buffer(&window_buffer[..], 160, 144).unwrap();
