@@ -152,11 +152,13 @@ impl GPU {
         }
     }
 
-    // GB has a weird way to store pixels. Each column has 2 bytes, and to get the tile pixel color
+    // GB has a weird way to store pixels. Each row has 2 bytes, and to get the tile pixel color
     // (2 bits), the msb is from the second byte and the lsb is from the first byte.
+    //
+    // address: 0x0000 - 0x1FFF
     fn update_tile(&mut self, address: usize) {
-        // base address
-        let address = address & 0x7FFF;
+        // make sure address is the first byte of each row
+        let address = address & 0x1FFE;
         // address / 16 = tile index
         let tile_idx = address >> 4;
         let row_idx = address >> 1 & 0x7;
