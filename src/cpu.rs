@@ -2860,25 +2860,25 @@ impl CPU {
     }
 
     // TODO implement
-    pub fn pixel_buffer(&self) -> std::slice::Iter<'_, u8> {
-        self.tmp_buffer.iter()
+    pub fn pixel_buffer(&self) -> std::slice::Iter<'_, u32> {
+        self.memory_bus.gpu.canvas_buffer.iter()
     }
 
     // runs one frame
     pub fn frame(&mut self) {
         let frame_clock = self.clock.t + 70224;
 
-        let mut cycles = 0;
+        let mut cycles: u32 = 0;
         while self.clock.t < frame_clock {
             self.log_debug(format!("emulating..."));
 
-            cycles += self.execute();
+            cycles += self.execute() as u32;
 
             self.clock.m += cycles as u32;
             // FIXME inefficient, but do we care?
             self.clock.t += (cycles as u32) * 4;
 
-            let cycles_t = cycles * 4;
+            let cycles_t = (cycles * 4) as u32;
 
             self.memory_bus.gpu.run(cycles_t.into());
         }
