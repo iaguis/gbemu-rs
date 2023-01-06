@@ -5,6 +5,8 @@ use crate::memory_bus::MemoryBus;
 
 use crate::debug;
 
+const ONE_FRAME_IN_CYCLES: u32 = 70224;
+
 pub struct CPU {
     pub reg: Registers,
     pub memory_bus: MemoryBus,
@@ -2866,7 +2868,7 @@ impl CPU {
 
     // runs one frame
     pub fn frame(&mut self) {
-        let frame_clock = self.clock.t + 70224;
+        let frame_clock = self.clock.t + ONE_FRAME_IN_CYCLES;
 
         let mut cycles: u32 = 0;
         while self.clock.t < frame_clock {

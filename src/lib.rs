@@ -12,7 +12,6 @@ use cpu::CPU;
 
 const NUMBER_OF_PIXELS: usize = 160*144 + 1;
 // TODO check
-const ONE_FRAME_IN_CYCLES: usize = 17556;
 
 pub struct Emulator {
     cpu: CPU,
