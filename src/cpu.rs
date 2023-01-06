@@ -15,7 +15,7 @@ pub struct CPU {
 
     // is this all we need for HALT?
     is_halted: bool,
-    IME: bool,
+    ime: bool,
     debug: bool,
     stepping: bool,
 }
@@ -765,7 +765,7 @@ impl CPU {
                 m: 0,
                 t: 0,
             },
-            IME: true,
+            ime: true,
             is_halted: false,
             debug: debug,
             stepping: false,
@@ -785,7 +785,7 @@ impl CPU {
         cpu
     }
 
-    #[inline(always)]
+   #[inline(always)]
     fn log_debug(&self, message: String) {
         if self.debug {
             eprintln!("{message}");
@@ -1706,7 +1706,7 @@ impl CPU {
 
                 cycles = 4;
                 self.reg.pc = ((msb as u16) << 8) | (lsb as u16);
-                self.IME = true;
+                self.ime = true;
             },
 
             Opcode::RST(address) => {
@@ -1868,14 +1868,14 @@ impl CPU {
             },
 
             Opcode::DI => {
-                self.IME = false;
+                self.ime = false;
 
                 cycles = 1;
                 self.reg.pc += 1;
             },
 
             Opcode::EI => {
-                self.IME = true;
+                self.ime = true;
 
                 cycles = 1;
                 self.reg.pc += 1;
@@ -2875,7 +2875,6 @@ impl CPU {
             cycles += self.execute() as u32;
 
             self.clock.m += cycles as u32;
-            // FIXME inefficient, but do we care?
             self.clock.t += (cycles as u32) * 4;
 
             let cycles_t = (cycles * 4) as u32;

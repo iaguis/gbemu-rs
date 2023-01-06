@@ -191,7 +191,6 @@ pub fn drop_to_shell(cpu: &mut CPU) -> rustyline::Result<DebuggerRet> {
                 println!("Error: {err:?}");
                 break;
             }
-            Err(_) => println!("No input"),
         }
     }
     rl.append_history(".gbdb_history")?;

@@ -36,15 +36,6 @@ impl Registers {
         }
     }
 
-    pub fn af(&self) -> u16 {
-        ((self.a as u16) << 8) | (self.f as u16)
-    }
-
-    pub fn set_af(&mut self, val: u16) {
-        self.a = ((val & 0xff00) >> 8) as u8;
-        self.f = (val & 0xff) as u8;
-    }
-
     pub fn bc(&self) -> u16 {
         ((self.b as u16) << 8) | (self.c as u16)
     }

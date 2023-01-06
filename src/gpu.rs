@@ -50,7 +50,7 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn toRGB(&self) -> u32 {
+    pub fn to_rgb(&self) -> u32 {
         match self {
             Color::White => 0xffffffff,
             Color::LightGray => 0xffc0c0c0,
@@ -278,7 +278,7 @@ impl GPU {
         for _ in 0..160 {
             let color = self.get_color(self.tile_set[tile as usize].data[y as usize][x as usize]);
 
-            self.canvas_buffer[canvas_offset] = color.toRGB();
+            self.canvas_buffer[canvas_offset] = color.to_rgb();
             canvas_offset += 1;
 
             x += 1;
