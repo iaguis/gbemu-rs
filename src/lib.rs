@@ -1,5 +1,3 @@
-use std::time;
-use std::thread;
 use std::env;
 
 mod registers;
@@ -36,19 +34,15 @@ impl Emulator {
 
     pub fn run(&mut self) {
         let mut window_buffer: [u32; NUMBER_OF_PIXELS+1] = [0; NUMBER_OF_PIXELS+1];
-        let mut cycles_elapsed = 0usize;
-        let mut now = time::Instant::now();
 
         while self.window.is_open() && !self.window.is_key_down(minifb::Key::Escape) {
             self.cpu.frame();
 
             for (i, pixel) in self.cpu.pixel_buffer().enumerate() {
-                println!("pixel = {}", *pixel);
-                window_buffer[i] = (*pixel);
+                window_buffer[i] = *pixel;
             }
 
             self.window.update_with_buffer(&window_buffer[..], 160, 144).unwrap();
-            cycles_elapsed = 0;
         }
     }
 }
