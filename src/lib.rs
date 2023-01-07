@@ -35,6 +35,9 @@ impl Emulator {
         let mut window_buffer: [u32; NUMBER_OF_PIXELS+1] = [0; NUMBER_OF_PIXELS+1];
 
         while self.window.is_open() && !self.window.is_key_down(minifb::Key::Escape) {
+            if self.window.is_key_down(minifb::Key::Space) {
+                self.cpu.stop_at_next_frame = true;
+            }
             self.cpu.frame();
 
             for (i, pixel) in self.cpu.pixel_buffer().enumerate() {

@@ -20,6 +20,7 @@ pub struct CPU {
     ime: bool,
     debug: bool,
     stepping: bool,
+    pub stop_at_next_frame: bool,
 }
 
 pub struct Clock {
@@ -771,6 +772,7 @@ impl CPU {
             is_halted: false,
             debug: debug,
             stepping: false,
+            stop_at_next_frame: false,
         };
 
         cpu.breakpoints.push(0x0);
@@ -820,18 +822,6 @@ impl CPU {
 
         // XXX this panics if it fails to decode the opcode, which is probably fine
         let opcode = self.fetch_byte().expect("failed fetching");
-
-        if self.debug && (self.breakpoints.contains(&self.reg.pc)
-        | self.stepping) {
-            let r = debug::drop_to_shell(self);
-            match r {
-                Ok(ret) => match ret {
-                    debug::DebuggerRet::Step => self.stepping = true,
-                    _ => self.stepping = false,
-                }
-                Err(_) => panic!("error dropping to shell!"),
-            }
-        }
 
         let mut cycles = 1;
 
@@ -2872,6 +2862,27 @@ impl CPU {
         while self.clock.t < frame_clock {
             self.log_debug(format!("emulating..."));
 
+            if self.debug && (self.breakpoints.contains(&self.reg.pc)
+            | self.stepping) {
+                let r = debug::drop_to_shell(self);
+                match r {
+                    Ok(ret) => match ret {
+                        debug::DebuggerRet::Step => {
+                            self.stepping = true;
+                        },
+                        debug::DebuggerRet::Frame => {
+                            self.stepping = false;
+                            self.stop_at_next_frame = true;
+                        }
+                        _ => {
+                            self.stepping = false;
+                            self.stop_at_next_frame = false;
+                        }
+                    }
+                    Err(_) => panic!("error dropping to shell!"),
+                }
+            }
+
             cycles += self.execute() as u32;
 
             self.clock.m += cycles as u32;
@@ -2881,5 +2892,25 @@ impl CPU {
 
             self.memory_bus.gpu.run(cycles_t.into());
         }
+
+        if self.stop_at_next_frame {
+            let r = debug::drop_to_shell(self);
+            match r {
+                Ok(ret) => match ret {
+                    debug::DebuggerRet::Step => {
+                        self.stepping = true;
+                    },
+                    debug::DebuggerRet::Frame => {
+                        self.stepping = false;
+                        self.stop_at_next_frame = true;
+                    }
+                    _ => {
+                        self.stepping = false;
+                        self.stop_at_next_frame = false;
+                    }
+                }
+                Err(_) => panic!("error dropping to shell!"),
+            }
+    }
     }
 }
