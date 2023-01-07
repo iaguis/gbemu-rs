@@ -338,7 +338,7 @@ impl GPU {
             0xFF43 => self.scx,
             0xFF44 => self.ly,
             0xFF47 => self.bg_palette.into(),
-            _ => panic!("bad address"),
+            _ => { 0 /* TODO */ },
         }
     }
 
@@ -357,7 +357,7 @@ impl GPU {
             0xFF47 => {
                 self.bg_palette = BackgroundPalette::from(val);
             },
-            _ => panic!("bad address"),
+            _ => { /* TODO */ },
         }
     }
 }
