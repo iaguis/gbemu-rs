@@ -293,8 +293,10 @@ impl GPU {
     }
 
     fn render_scan(&mut self) {
-        let base_address: u16 = if !self.lcdc.bg_tilemap { 0x1C00 } else { 0x1800 };
-        let visible_offset = base_address + (((self.scy + self.ly) & 0xFF) as u16) >> 3;
+        let base_address: u16 = if self.lcdc.bg_tilemap { 0x1C00 } else { 0x1800 };
+        let tile_map_y = (((self.scy + self.ly) as u16) & 0xff) >> 3;
+
+        let visible_offset = base_address + (tile_map_y * 32);
         let mut line_offset = (self.scx as u16) >> 3;
 
         let mut x = self.scx & 7;
@@ -304,7 +306,7 @@ impl GPU {
 
         let mut tile = self.video_ram[(visible_offset + line_offset) as usize] as u16;
 
-        if !self.lcdc.bg_tilemap && tile < 128 {
+        if self.lcdc.bg_tilemap && tile < 128 {
             tile += 256;
         }
 
@@ -317,10 +319,11 @@ impl GPU {
             x += 1;
             if x == 8 {
                 x = 0;
-                line_offset = (line_offset + 1) & 31;
+                line_offset = line_offset + 1;
+
                 tile = self.video_ram[(visible_offset + line_offset) as usize] as u16;
 
-                if !self.lcdc.bg_tilemap && tile < 128 {
+                if self.lcdc.bg_tilemap && tile < 128 {
                     tile += 256;
                 }
             }
