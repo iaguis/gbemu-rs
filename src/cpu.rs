@@ -2757,7 +2757,7 @@ impl CPU {
 
                         match position {
                             BitPosition::B0 => {
-                                *reg = *reg % !0b1;
+                                *reg = *reg & !0b1;
                             },
                             BitPosition::B1 => {
                                 *reg = *reg & !(0b1 << 1);
