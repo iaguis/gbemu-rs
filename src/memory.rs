@@ -35,7 +35,7 @@ impl Memory {
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000],
             0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000],
             0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80],
-            _ => { print!("reading {:#04x}: ", address); panic!("bad address"); },
+            _ => { panic!("bad address: {:#04x}", address); },
         }
     }
 
@@ -46,7 +46,7 @@ impl Memory {
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000] = val,
             0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000] = val,
             0xFF80..=0xFFFE => self.hram[address as usize - 0xFF80] = val,
-            _ => { print!("writing {:#04x}: ", address); panic!("bad address"); },
+            _ => { panic!("bad address: {:#04x}", address); },
         }
     }
 
