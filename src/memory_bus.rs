@@ -36,7 +36,7 @@ impl MemoryBus {
             0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
             0xFF00..=0xFF3F | 0xFF51..=0xFF7F => self.io.read_byte(address),
-            0xFF40..=0xFF4B => self.gpu.read_byte(address),
+            0xFF40..=0xFF4F => self.gpu.read_byte(address),
             0xFF50 => {
                 if self.memory.expose_boot_rom {
                     0
@@ -62,7 +62,7 @@ impl MemoryBus {
             0xFE00..=0xFE9F => { /* TODO OAM */ },
             0xFEA0..=0xFEFF => { /* Not Usable */ },
             0xFF00..=0xFF3F | 0xFF51..=0xFF7F => self.io.write_byte(address, val),
-            0xFF40..=0xFF4B => self.gpu.write_byte(address, val),
+            0xFF40..=0xFF4F => self.gpu.write_byte(address, val),
             0xFF50 => {
                 if val != 0 && self.memory.expose_boot_rom {
                     self.memory.expose_boot_rom = false;
