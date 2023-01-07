@@ -224,7 +224,9 @@ impl GPU {
                     self.mode_clock = 0;
                     self.mode = GPUMode::HBlank;
 
-                    self.render_scan();
+                    if self.lcdc.lcd_enable {
+                        self.render_scan();
+                    }
                 }
             },
             GPUMode::HBlank => {
