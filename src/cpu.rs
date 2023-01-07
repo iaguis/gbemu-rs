@@ -1570,7 +1570,7 @@ impl CPU {
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 3;
+                            self.reg.pc = next_instruction;
                         }
                     },
                     JCondition::NC => {
@@ -1587,7 +1587,7 @@ impl CPU {
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 3;
+                            self.reg.pc = next_instruction;
                         }
                     },
                     JCondition::Z => {
@@ -1604,7 +1604,7 @@ impl CPU {
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 3;
+                            self.reg.pc = next_instruction;
                         }
                     },
                     JCondition::C => {
@@ -1621,7 +1621,7 @@ impl CPU {
                             cycles = 6;
                         } else {
                             cycles = 3;
-                            self.reg.pc += 3;
+                            self.reg.pc = next_instruction;
                         }
                     },
                 }
