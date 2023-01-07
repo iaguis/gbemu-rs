@@ -1374,7 +1374,7 @@ impl CPU {
                 self.reg.set_flag(Flag::Z, false);
                 self.reg.set_flag(Flag::N, false);
                 self.reg.set_flag(Flag::H, false);
-                self.reg.set_flag(Flag::C, self.reg.a & 0x01 == 0x01);
+                self.reg.set_flag(Flag::C, (self.reg.a & 0x01) == 0x01);
 
                 cycles = 1;
                 self.reg.a = r;
@@ -1993,7 +1993,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.a & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.a & 0x01) == 0x01);
 
                                 self.reg.a = r;
                             },
@@ -2003,7 +2003,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.b & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.b & 0x01) == 0x01);
 
                                 self.reg.b = r;
                             },
@@ -2013,7 +2013,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.c & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.c & 0x01) == 0x01);
 
                                 self.reg.c = r;
                             },
@@ -2023,7 +2023,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.d & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.d & 0x01) == 0x01);
 
                                 self.reg.d = r;
                             },
@@ -2033,7 +2033,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.e & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.e & 0x01) == 0x01);
 
                                 self.reg.e = r;
                             },
@@ -2043,7 +2043,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.h & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.h & 0x01) == 0x01);
 
                                 self.reg.h = r;
                             },
@@ -2053,7 +2053,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, self.reg.l & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (self.reg.l & 0x01) == 0x01);
 
                                 self.reg.l = r;
                             },
@@ -2064,7 +2064,7 @@ impl CPU {
                                 self.reg.set_flag(Flag::Z, r == 0);
                                 self.reg.set_flag(Flag::N, false);
                                 self.reg.set_flag(Flag::H, false);
-                                self.reg.set_flag(Flag::C, val & 0x01 == 0x01);
+                                self.reg.set_flag(Flag::C, (val & 0x01) == 0x01);
 
                                 self.memory_bus.write_byte(self.reg.hl(), r);
                             },
