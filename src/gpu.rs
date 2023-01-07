@@ -236,7 +236,6 @@ impl GPU {
 
                     if self.ly == 143 {
                         self.mode = GPUMode::VBlank;
-                        self.write_pixels();
                     } else {
                         self.mode = GPUMode::OAMRead;
                     }
@@ -327,8 +326,6 @@ impl GPU {
             }
         }
     }
-
-    fn write_pixels(&self) { }
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
