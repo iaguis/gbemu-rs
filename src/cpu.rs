@@ -5,8 +5,6 @@ use crate::memory_bus::MemoryBus;
 
 use crate::debug;
 
-const ONE_FRAME_IN_CYCLES: u32 = 70224;
-
 pub struct CPU {
     pub reg: Registers,
     pub memory_bus: MemoryBus,
@@ -2854,43 +2852,38 @@ impl CPU {
     }
 
     // runs one frame
-    pub fn frame(&mut self) {
-        let frame_clock = self.clock.t + ONE_FRAME_IN_CYCLES;
+    pub fn step(&mut self) -> usize {
+        self.log_debug(format!("emulating..."));
 
-        let mut cycles: u32 = 0;
-        while self.clock.t < frame_clock {
-            self.log_debug(format!("emulating..."));
-
-            if self.debug && (self.breakpoints.contains(&self.reg.pc)
-            | self.stepping) {
-                let r = debug::drop_to_shell(self);
-                match r {
-                    Ok(ret) => match ret {
-                        debug::DebuggerRet::Step => {
-                            self.stepping = true;
-                        },
-                        debug::DebuggerRet::Frame => {
-                            self.stepping = false;
-                            self.stop_at_next_frame = true;
-                        }
-                        _ => {
-                            self.stepping = false;
-                            self.stop_at_next_frame = false;
-                        }
+        if self.debug && (self.breakpoints.contains(&self.reg.pc)
+        | self.stepping) {
+            let r = debug::drop_to_shell(self);
+            match r {
+                Ok(ret) => match ret {
+                    debug::DebuggerRet::Step => {
+                        self.stepping = true;
+                    },
+                    debug::DebuggerRet::Frame => {
+                        self.stepping = false;
+                        self.stop_at_next_frame = true;
                     }
-                    Err(_) => panic!("error dropping to shell!"),
+                    _ => {
+                        self.stepping = false;
+                        self.stop_at_next_frame = false;
+                    }
                 }
+                Err(_) => panic!("error dropping to shell!"),
             }
-
-            cycles += self.execute() as u32;
-
-            self.clock.m += cycles as u32;
-            self.clock.t += (cycles as u32) * 4;
-
-            let cycles_t = (cycles * 4) as u32;
-
-            self.memory_bus.gpu.run(cycles_t.into());
         }
+
+        let cycles = self.execute() as u32;
+
+        self.clock.m += cycles as u32;
+        self.clock.t += (cycles as u32) * 4;
+
+        let cycles_t = cycles as u32 * 4;
+
+        self.memory_bus.gpu.run(cycles_t.into());
 
         if self.stop_at_next_frame {
             let r = debug::drop_to_shell(self);
@@ -2910,6 +2903,8 @@ impl CPU {
                 }
                 Err(_) => panic!("error dropping to shell!"),
             }
-    }
+        }
+
+        cycles as usize
     }
 }
