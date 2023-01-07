@@ -46,9 +46,6 @@ impl MemoryBus {
             }
             0xFF80..=0xFFFE => self.memory.read_byte(address),
             0xFFFF => { 0 /* TODO Interrupt flag */ },
-            _ => {
-                panic!("bad address: {:#04x}", address);
-            }
         }
     }
 
@@ -70,9 +67,6 @@ impl MemoryBus {
             }
             0xFF80..=0xFFFE => self.memory.write_byte(address, val),
             0xFFFF => { /* TODO Interrupt flag */ },
-            _ => {
-                panic!("bad address: {:#04x}", address);
-            }
         }
     }
 }
