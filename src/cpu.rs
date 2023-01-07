@@ -941,7 +941,6 @@ impl CPU {
                         let n = self.memory_bus.read_byte(self.reg.pc + 1);
                         let address = (0x00FF << 8) | n as u16;
 
-                        println!("writing {:#04x} to {:#04x}", self.reg.a, address);
                         self.memory_bus.write_byte(address, self.reg.a);
 
                         cycles = 3;
