@@ -1358,7 +1358,7 @@ impl CPU {
             Opcode::RLA => {
                 let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 };
                 let r = self.reg.a << 1 | c;
-                self.reg.set_flag(Flag::Z, r == 0);
+                self.reg.set_flag(Flag::Z, false);
                 self.reg.set_flag(Flag::N, false);
                 self.reg.set_flag(Flag::H, false);
                 self.reg.set_flag(Flag::C, (0x80 & self.reg.a) == 0x80);
@@ -1384,7 +1384,7 @@ impl CPU {
             Opcode::RRA => {
                 let c = if self.reg.get_flag(Flag::C) { 1 } else { 0 } << 7;
                 let r = c | self.reg.a >> 1;
-                self.reg.set_flag(Flag::Z, r == 0);
+                self.reg.set_flag(Flag::Z, false);
                 self.reg.set_flag(Flag::N, false);
                 self.reg.set_flag(Flag::H, false);
                 self.reg.set_flag(Flag::C, (0x01 & self.reg.a) == 0x01);
