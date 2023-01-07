@@ -949,25 +949,24 @@ impl CPU {
                         }
                     },
                     LDType::AddressFromA => {
-                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
-                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
-                        let address = ((msb as u16) << 8) | lsb as u16;
+                        let n = self.memory_bus.read_byte(self.reg.pc + 1);
+                        let address = (0x00FF << 8) | n as u16;
 
+                        println!("writing {:#04x} to {:#04x}", self.reg.a, address);
                         self.memory_bus.write_byte(address, self.reg.a);
 
-                        cycles = 4;
-                        self.reg.pc += 3;
+                        cycles = 3;
+                        self.reg.pc += 2;
                     },
 
                     LDType::AFromAddress => {
-                        let msb = self.memory_bus.read_byte(self.reg.pc + 2);
-                        let lsb = self.memory_bus.read_byte(self.reg.pc + 1);
-                        let address = ((msb as u16) << 8) | lsb as u16;
+                        let n = self.memory_bus.read_byte(self.reg.pc + 1);
+                        let address = (0x00FF << 8) | n as u16;
 
                         self.reg.a = self.memory_bus.read_byte(address);
 
-                        cycles = 4;
-                        self.reg.pc += 3;
+                        cycles = 3;
+                        self.reg.pc += 2;
                     },
 
                     LDType::AFromIndirect(indirect) => {
