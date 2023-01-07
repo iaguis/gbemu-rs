@@ -11,6 +11,7 @@ use crate::registers::Flag;
 pub enum DebuggerRet {
     Step,
     Continue,
+    Frame,
 }
 
 pub enum Registers {
@@ -176,6 +177,7 @@ pub fn drop_to_shell(cpu: &mut CPU) -> rustyline::Result<DebuggerRet> {
                             Err(_) => { println!("bad number"); continue; },
                         };
                     }
+                    "f"|"frame" => { ret = DebuggerRet::Frame; break; },
                     &_ => println!("{}: Command not found", line.as_str()),
                 }
             }
