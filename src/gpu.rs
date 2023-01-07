@@ -109,9 +109,41 @@ impl From<u8> for BackgroundPalette {
 }
 
 impl From<BackgroundPalette> for u8 {
-     fn from(value: BackgroundPalette) -> u8 {
-         value.3.into()
-     }
+    // TODO fix this ugliness
+    fn from(value: BackgroundPalette) -> u8 {
+        let v3 = match value.3 {
+            Color::White => 0,
+            Color::LightGray => 1,
+            Color::DarkGray => 2,
+            Color::Black => 3,
+        };
+
+        let v2 = match value.2 {
+            Color::White => 0,
+            Color::LightGray => 1,
+            Color::DarkGray => 2,
+            Color::Black => 3,
+        };
+
+        let v1 = match value.1 {
+            Color::White => 0,
+            Color::LightGray => 1,
+            Color::DarkGray => 2,
+            Color::Black => 3,
+        };
+
+        let v0 = match value.0 {
+            Color::White => 0,
+            Color::LightGray => 1,
+            Color::DarkGray => 2,
+            Color::Black => 3,
+        };
+
+        (v3 << 6) |
+        (v2 << 4) |
+        (v1 << 2) |
+        v0
+    }
 }
 
 
