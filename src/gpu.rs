@@ -41,7 +41,7 @@ pub struct LCDC {
     bg_window_priority: bool,
 }
 
-#[derive(Clone,Copy)]
+#[derive(Debug,Clone,Copy)]
 pub enum Color {
     White = 255,
     LightGray = 192,
