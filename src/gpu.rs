@@ -278,7 +278,7 @@ impl GPU {
             let msb = if (self.video_ram[address+1] & bit_index) != 0 {1} else {0};
             let lsb = if (self.video_ram[address] & bit_index) != 0 {1} else {0};
 
-            self.tile_set[tile_idx].data[row_idx][col_idx] = (msb << 1) | lsb
+            self.tile_set[tile_idx].data[row_idx][col_idx] = (msb << 1) | lsb;
         }
     }
 
