@@ -31,7 +31,7 @@ impl MemoryBus {
         match address {
             0..=0x7FFF => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
-            0xC000..=0xDFFF => self.memory.read_byte(address),
+            0xA000..=0xDFFF => self.memory.read_byte(address),
             0xE000..=0xFDFF => self.memory.read_byte(address - 0x2000),
             0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
@@ -58,7 +58,7 @@ impl MemoryBus {
         match address {
             0..=0x7FFF => self.memory.write_byte(address, val),
             0x8000..=0x9FFF => self.gpu.write_byte(address, val),
-            0xC000..=0xDFFF => self.memory.write_byte(address, val),
+            0xA000..=0xDFFF => self.memory.write_byte(address, val),
             0xE000..=0xFDFF => { },
             0xFE00..=0xFE9F => { /* TODO OAM */ },
             0xFEA0..=0xFEFF => { /* Not Usable */ },
