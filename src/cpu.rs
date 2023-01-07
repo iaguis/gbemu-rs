@@ -913,16 +913,16 @@ impl CPU {
                                 self.memory_bus.write_byte(de, a);
                             }
                             Indirect::HLIndirectInc => {
+                                self.memory_bus.write_byte(self.reg.hl(), a);
+
                                 let r = self.reg.alu_inc16(self.reg.hl());
                                 self.reg.set_hl(r);
-
-                                self.memory_bus.write_byte(r, a);
                             }
                             Indirect::HLIndirectDec => {
+                                self.memory_bus.write_byte(self.reg.hl(), a);
+
                                 let r = self.reg.alu_dec16(self.reg.hl());
                                 self.reg.set_hl(r);
-
-                                self.memory_bus.write_byte(r, a);
                             }
                             Indirect::WordIndirect => {
                                 let msb = self.memory_bus.read_byte(self.reg.pc + 2);
@@ -979,16 +979,16 @@ impl CPU {
                                 self.reg.a = self.memory_bus.read_byte(de);
                             }
                             Indirect::HLIndirectInc => {
+                                self.reg.a = self.memory_bus.read_byte(self.reg.hl());
+
                                 let r = self.reg.alu_inc16(self.reg.hl());
                                 self.reg.set_hl(r);
-
-                                self.reg.a = self.memory_bus.read_byte(r);
                             }
                             Indirect::HLIndirectDec => {
+                                self.reg.a = self.memory_bus.read_byte(self.reg.hl());
+
                                 let r = self.reg.alu_dec16(self.reg.hl());
                                 self.reg.set_hl(r);
-
-                                self.reg.a = self.memory_bus.read_byte(r);
                             }
                             Indirect::WordIndirect => {
                                 let msb = self.memory_bus.read_byte(self.reg.pc + 2);
