@@ -77,7 +77,7 @@ impl Registers {
 
     fn alu_add_internal(&mut self, b: u8, with_carry: bool) {
         let a = self.a;
-        let c = self.get_flag(Flag::C) as u8;
+        let c = if self.get_flag(Flag::C) { 1 } else { 0 };
         let mut r = a.wrapping_add(b);
 
         if with_carry {
@@ -136,7 +136,7 @@ impl Registers {
 
     fn alu_sub_internal(&mut self, b: u8, with_carry: bool) {
         let a = self.a;
-        let c = self.get_flag(Flag::C) as u8;
+        let c = if self.get_flag(Flag::C) { 1 } else { 0 };
         let mut r = a.wrapping_sub(b);
 
         if with_carry {
