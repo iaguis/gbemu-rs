@@ -1827,7 +1827,7 @@ impl CPU {
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.a = msb;
-                        self.reg.f = lsb;
+                        self.reg.f = lsb & 0xF0;
                     },
                     StackTarget::BC => {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
