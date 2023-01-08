@@ -1406,10 +1406,10 @@ impl CPU {
                     }
                 } else {
                     if c {
-                        a -= 0x60;
+                        a = a.wrapping_sub(0x60) ;
                     }
                     if h {
-                        a -= 0x6;
+                        a = a.wrapping_sub(0x6);
                     }
                 }
 
