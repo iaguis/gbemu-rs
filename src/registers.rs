@@ -104,12 +104,11 @@ impl Registers {
 
     pub fn alu_addhl(&mut self, b: u16) {
         let hl = self.hl();
-        let r = hl.wrapping_add(b);
+        let (r, carry) = hl.overflowing_add(b);
 
-        self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::C, hl + b > 0xFF);
-        self.set_flag(Flag::H, (hl & 0xF) + (b & 0xF) > 0xF);
+        self.set_flag(Flag::C, carry);
+        self.set_flag(Flag::H, (hl & 0x0FFF) + (b & 0x0FFF) > 0x0FFF);
 
         let msb = (r >> 8) as u8;
         let lsb = (r & 0xf) as u8;
@@ -120,11 +119,11 @@ impl Registers {
 
     pub fn alu_addsp(&mut self, b: u8) {
         let val = b as i8;
-        let r = (self.sp as i16).wrapping_add(val as i16) as u16;
+        let r = (self.sp as i32).wrapping_add(val as i32) as u16;
 
         self.set_flag(Flag::Z, false);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::C, self.sp + r > 0xFF);
+        self.set_flag(Flag::C, (self.sp as u32 + r as u32) > 0xFF);
         self.set_flag(Flag::H, (self.sp & 0xF) + (r & 0xF) > 0xF);
 
         self.sp = r;
