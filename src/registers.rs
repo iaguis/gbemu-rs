@@ -144,7 +144,7 @@ impl Registers {
         }
 
         self.set_flag(Flag::Z, r == 0);
-        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::N, true);
 
         if with_carry {
             self.set_flag(Flag::C, (a as i16) - (b as i16) - (c as i16) < 0);
