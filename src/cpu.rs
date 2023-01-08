@@ -862,7 +862,7 @@ impl CPU {
                         }
 
                         match source {
-                            LDSource::D8|LDSource::HLIndirect => {cycles = 2; self.reg.pc += 2},
+                            LDSource::D8 => {cycles = 2; self.reg.pc += 2},
                             _ => {cycles = 1; self.reg.pc += 1}
                         }
                     },
