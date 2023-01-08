@@ -122,7 +122,7 @@ impl Registers {
         let val = b as i8;
         let r = (self.sp as i16).wrapping_add(val as i16) as u16;
 
-        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::Z, false);
         self.set_flag(Flag::N, false);
         self.set_flag(Flag::C, self.sp + r > 0xFF);
         self.set_flag(Flag::H, (self.sp & 0xF) + (r & 0xF) > 0xF);
