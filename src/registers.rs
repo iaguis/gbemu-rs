@@ -199,13 +199,10 @@ impl Registers {
     }
 
     pub fn alu_cp(&mut self, b: u8) {
-        let a = self.a;
-        let r = a.wrapping_sub(b);
-
-        self.set_flag(Flag::Z, r == 0);
+        self.set_flag(Flag::Z, self.a == b);
         self.set_flag(Flag::N, true);
-        self.set_flag(Flag::C, (a as i16) - (b as i16) < 0);
-        self.set_flag(Flag::H, ((a & 0xF) as i16) - ((b & 0xF) as i16) < 0);
+        self.set_flag(Flag::C, self.a < b);
+        self.set_flag(Flag::H, (self.a & 0xF) < (b & 0xF));
     }
 
     pub fn alu_inc(&mut self, a: u8) -> u8 {
