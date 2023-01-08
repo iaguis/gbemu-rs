@@ -47,6 +47,10 @@ impl Emulator {
         let mut now = Instant::now();
 
         while self.window.is_open() && !self.window.is_key_down(minifb::Key::Escape) {
+            if self.window.is_key_down(minifb::Key::Space) {
+                self.cpu.stop_at_next_frame = true;
+            }
+
             let time_delta = now.elapsed().subsec_nanos();
             now = Instant::now();
             let delta = time_delta as f64 / ONE_SECOND_IN_MICROS as f64;
@@ -60,6 +64,10 @@ impl Emulator {
             cycles_elapsed_in_frame += cycles_elapsed;
 
             if cycles_elapsed_in_frame >= ONE_FRAME_IN_CYCLES {
+                if self.cpu.stop_at_next_frame {
+                    self.cpu.drop_to_shell();
+                }
+
                 for (i, pixel) in self.cpu.pixel_buffer().enumerate() {
                     window_buffer[i] = *pixel;
                 }

@@ -2888,26 +2888,26 @@ impl CPU {
 
         self.memory_bus.gpu.run(cycles_t.into());
 
-        if self.stop_at_next_frame {
-            let r = debug::drop_to_shell(self);
-            match r {
-                Ok(ret) => match ret {
-                    debug::DebuggerRet::Step => {
-                        self.stepping = true;
-                    },
-                    debug::DebuggerRet::Frame => {
-                        self.stepping = false;
-                        self.stop_at_next_frame = true;
-                    }
-                    _ => {
-                        self.stepping = false;
-                        self.stop_at_next_frame = false;
-                    }
-                }
-                Err(_) => panic!("error dropping to shell!"),
-            }
-        }
-
         cycles_t as usize
+    }
+
+    pub fn drop_to_shell(&mut self) {
+        let r = debug::drop_to_shell(self);
+        match r {
+            Ok(ret) => match ret {
+                debug::DebuggerRet::Step => {
+                    self.stepping = true;
+                },
+                debug::DebuggerRet::Frame => {
+                    self.stepping = false;
+                    self.stop_at_next_frame = true;
+                }
+                _ => {
+                    self.stepping = false;
+                    self.stop_at_next_frame = false;
+                }
+            }
+            Err(_) => panic!("error dropping to shell!"),
+        }
     }
 }
