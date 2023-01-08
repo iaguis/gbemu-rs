@@ -164,6 +164,7 @@ pub enum LDType {
     AddressFromA,
     SPFromHL,
     IndirectFromSP,
+    HLFromSPPlusN
 }
 
 #[derive(Debug)]
@@ -477,7 +478,7 @@ impl TryFrom<u8> for Opcode {
             0xf5 => Ok(Opcode::PUSH(StackTarget::AF)),
             0xf6 => Ok(Opcode::OR(ALUOperand::D8)),
             0xf7 => Ok(Opcode::RST(RSTAddress::X30)),
-            0xf8 => Ok(Opcode::LD(LDType::IndirectFromSP)),
+            0xf8 => Ok(Opcode::LD(LDType::HLFromSPPlusN)),
             0xf9 => Ok(Opcode::LD(LDType::SPFromHL)),
             0xfa => Ok(Opcode::LD(LDType::AFromIndirect(Indirect::WordIndirect))),
             0xfb => Ok(Opcode::EI),
@@ -1022,6 +1023,27 @@ impl CPU {
                         cycles = 5;
                         self.reg.pc += 3;
                     },
+
+                    LDType::HLFromSPPlusN => {
+                        let n = self.memory_bus.read_byte(self.reg.pc + 1) as i8 as i16;
+
+                        let res = if n >= 0 {
+                            self.reg.sp.wrapping_add(n as u16)
+                        } else {
+                            self.reg.sp.wrapping_sub(n.abs() as u16)
+                        };
+
+                        self.reg.h = (res >> 8) as u8;
+                        self.reg.l = (res & 0xff) as u8;
+
+                        self.reg.set_flag(Flag::Z, false);
+                        self.reg.set_flag(Flag::N, false);
+                        self.reg.set_flag(Flag::C, (self.reg.sp as i32 + n as i32) > 0xFF);
+                        self.reg.set_flag(Flag::H, (self.reg.sp & 0xF) as i32 + (n & 0xF) as i32 > 0xF);
+
+                        cycles = 3;
+                        self.reg.pc += 2;
+                    }
                 }
             },
 
