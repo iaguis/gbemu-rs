@@ -22,7 +22,7 @@ impl Memory {
             wram_0: [0; 0xFFF+1],
             wram_n: [0; 0xFFF+1],
             hram: [0; 0x7E+1],
-            expose_boot_rom: true,
+            expose_boot_rom: false,
         }
     }
 

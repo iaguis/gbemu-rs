@@ -773,7 +773,7 @@ impl CPU {
             stop_at_next_frame: false,
         };
 
-        cpu.breakpoints.push(0x0);
+        cpu.breakpoints.push(0x100);
 
         // TODO error handling
 

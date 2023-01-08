@@ -32,7 +32,7 @@ impl Registers {
             h: 0,
             l: 0,
             sp: 0,
-            pc: 0,
+            pc: 0x100,
         }
     }
 
