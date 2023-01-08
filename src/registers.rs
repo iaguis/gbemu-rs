@@ -86,7 +86,6 @@ impl Registers {
 
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        // half carry
 
         if with_carry {
             self.set_flag(Flag::C, (a as u16) + (b as u16) + (c as u16) > 0xFF);
@@ -146,7 +145,6 @@ impl Registers {
 
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        // half carry
 
         if with_carry {
             self.set_flag(Flag::C, (a as i16) - (b as i16) - (c as i16) < 0);
