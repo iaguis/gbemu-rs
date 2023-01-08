@@ -1830,22 +1830,22 @@ impl CPU {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.a = msb;
-                        self.reg.f = lsb;
+                        self.reg.b = msb;
+                        self.reg.c = lsb;
                     },
                     StackTarget::DE => {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.a = msb;
-                        self.reg.f = lsb;
+                        self.reg.d = msb;
+                        self.reg.e = lsb;
                     },
                     StackTarget::HL => {
                         let lsb = self.memory_bus.read_byte(self.reg.sp);
                         self.reg.sp += 1;
                         let msb = self.memory_bus.read_byte(self.reg.sp);
-                        self.reg.a = msb;
-                        self.reg.f = lsb;
+                        self.reg.h = msb;
+                        self.reg.l = lsb;
                     },
                 }
                 self.reg.sp += 1;
