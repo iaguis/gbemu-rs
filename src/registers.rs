@@ -212,7 +212,7 @@ impl Registers {
         let r = a.wrapping_add(1);
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, (a & 0xf) + 1 > 0xF);
+        self.set_flag(Flag::H, (a & 0xF) == 0xF);
 
         r
     }
@@ -222,8 +222,8 @@ impl Registers {
 
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, (a & 0xF) + 1 > 0xF);
-        self.set_flag(Flag::C, (a & 0xFF) + 1 > 0xFF);
+        self.set_flag(Flag::H, (a & 0xF) == 0xF);
+        self.set_flag(Flag::C, (a & 0xFF) == 0xFF);
 
         r
     }
@@ -232,7 +232,7 @@ impl Registers {
         let r = a.wrapping_sub(1);
         self.set_flag(Flag::Z, r == 0);
         self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, (a & 0xf) == 0);
+        self.set_flag(Flag::H, (a & 0xF) == 0);
 
         r
     }
