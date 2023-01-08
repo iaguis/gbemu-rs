@@ -2905,6 +2905,6 @@ impl CPU {
             }
         }
 
-        cycles as usize
+        cycles_t as usize
     }
 }
