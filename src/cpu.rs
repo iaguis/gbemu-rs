@@ -234,7 +234,7 @@ pub enum LDTarget {
 }
 
 impl TryFrom<u8> for Opcode {
-    type Error = &'static str;
+    type Error = String;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
@@ -483,7 +483,7 @@ impl TryFrom<u8> for Opcode {
             0xfb => Ok(Opcode::EI),
             0xfe => Ok(Opcode::CP(ALUOperand::D8)),
             0xff => Ok(Opcode::RST(RSTAddress::X38)),
-            _ => Err("unknown opcode"),
+            _ => Err(format!("unknown opcode: {:#04x}", value)),
         }
     }
 }
@@ -794,13 +794,16 @@ impl CPU {
         }
     }
 
-    fn fetch_byte(&mut self) -> Result<Opcode, &'static str> {
+    fn fetch_byte(&mut self) -> Result<Opcode, String> {
         let b = self.memory_bus.read_byte(self.reg.pc.into());
         self.log_debug(format!("pc = {:#04x}", self.reg.pc));
         self.log_debug(format!("mem[pc] = {:#04x}", b));
 
-        let opcode = Opcode::try_from(b)?;
-        Ok(opcode)
+        let opcode = Opcode::try_from(b);
+        match opcode {
+            Err(e) => Err(format!("At {:#04x}: {}", self.reg.pc, e)),
+            Ok(opcode) => Ok(opcode),
+        }
     }
 
     fn fetch_prefixed_byte(&mut self) -> Result<PrefixedOpcode, &'static str> {
