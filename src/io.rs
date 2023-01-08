@@ -44,9 +44,11 @@ impl IO {
             0xFF00 => { self.joypad = val },
             0xFF01 => {
                 self.serial = val;
-                print!("{}", val as char);
             },
-            0xFF02 => { self.serial_control = val },
+            0xFF02 => {
+                print!("{}", self.serial as char);
+                self.serial_control = 0;
+            },
             0xFF04 => { self.div = val },
             0xFF05 => { self.tima = val },
             0xFF06 => { self.tma = val },
