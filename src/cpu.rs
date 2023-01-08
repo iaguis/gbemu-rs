@@ -1518,7 +1518,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 2;
+                            self.reg.pc = next_instruction;
                             cycles = 3;
                         }
                     },
@@ -1527,7 +1527,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 2;
+                            self.reg.pc = next_instruction;
                             cycles = 3;
                         }
                     },
@@ -1536,7 +1536,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 2;
+                            self.reg.pc = next_instruction;
                             cycles = 3;
                         }
                     },
@@ -1545,7 +1545,7 @@ impl CPU {
                             self.reg.pc = jp_address;
                             cycles = 4;
                         } else {
-                            self.reg.pc += 2;
+                            self.reg.pc = next_instruction;
                             cycles = 3;
                         }
                     },
