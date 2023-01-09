@@ -307,9 +307,9 @@ impl GPU {
 
         let mut canvas_offset : usize = (ly * 160).into();
 
-        let mut tile = self.video_ram[(visible_offset + line_offset) as usize] as u16;
+        let mut tile = self.video_ram[(visible_offset + line_offset) as usize] as i16;
 
-        if self.lcdc.bg_tilemap && tile < 128 {
+        if !self.lcdc.bg_window_addressing_mode && tile < 0 {
             tile += 256;
         }
 
@@ -322,11 +322,11 @@ impl GPU {
             x += 1;
             if x == 8 {
                 x = 0;
-                line_offset = line_offset + 1;
+                line_offset = (line_offset + 1) & 0x1F;
 
-                tile = self.video_ram[(visible_offset + line_offset) as usize] as u16;
+                tile = self.video_ram[(visible_offset + line_offset) as usize] as i16;
 
-                if self.lcdc.bg_tilemap && tile < 128 {
+                if !self.lcdc.bg_window_addressing_mode && tile < 0 {
                     tile += 256;
                 }
             }
