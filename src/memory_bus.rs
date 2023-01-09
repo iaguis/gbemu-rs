@@ -8,6 +8,7 @@ pub struct MemoryBus {
     memory: Memory,
     io: IO,
     pub gpu: GPU,
+    interrupt_enable: u8,
 }
 
 impl MemoryBus {
@@ -16,6 +17,7 @@ impl MemoryBus {
             memory: Memory::new(),
             gpu: GPU::new(),
             io: IO::new(),
+            interrupt_enable: 0,
         }
     }
 
@@ -35,8 +37,14 @@ impl MemoryBus {
             0xE000..=0xFDFF => self.memory.read_byte(address - 0x2000),
             0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
-            0xFF00..=0xFF3F | 0xFF51..=0xFF7F => self.io.read_byte(address),
+            0xFF00..=0xFF0E => self.io.read_byte(address),
+            0xFF0F => {
+                let vblank_interrupt = if self.gpu.vblank_interrupt {1} else {0};
+                vblank_interrupt
+            },
+            0xFF10..=0xFF3F => self.io.read_byte(address),
             0xFF40..=0xFF4F => self.gpu.read_byte(address),
+            0xFF51..=0xFF7F => self.io.read_byte(address),
             0xFF50 => {
                 if self.memory.expose_boot_rom {
                     0
@@ -45,7 +53,7 @@ impl MemoryBus {
                 }
             }
             0xFF80..=0xFFFE => self.memory.read_byte(address),
-            0xFFFF => { 0 /* TODO Interrupt flag */ },
+            0xFFFF => { self.interrupt_enable },
         }
     }
 
@@ -58,15 +66,24 @@ impl MemoryBus {
             0xE000..=0xFDFF => { },
             0xFE00..=0xFE9F => { /* TODO OAM */ },
             0xFEA0..=0xFEFF => { /* Not Usable */ },
-            0xFF00..=0xFF3F | 0xFF51..=0xFF7F => self.io.write_byte(address, val),
+            0xFF00..=0xFF0E => self.io.write_byte(address, val),
+            0xFF0F => {
+                if val == 0 {
+                    self.gpu.vblank_interrupt = false;
+                } else {
+                    self.gpu.vblank_interrupt = true;
+                }
+            },
+            0xFF10..=0xFF3F => self.io.write_byte(address, val),
             0xFF40..=0xFF4F => self.gpu.write_byte(address, val),
             0xFF50 => {
                 if val != 0 && self.memory.expose_boot_rom {
                     self.memory.expose_boot_rom = false;
                 }
             }
+            0xFF51..=0xFF7F => self.io.write_byte(address, val),
             0xFF80..=0xFFFE => self.memory.write_byte(address, val),
-            0xFFFF => { /* TODO Interrupt flag */ },
+            0xFFFF => { self.interrupt_enable = val; },
         }
     }
 }

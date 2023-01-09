@@ -22,6 +22,8 @@ pub struct GPU {
     pub mode_clock: u32,
     pub mode: GPUMode,
 
+    pub vblank_interrupt: bool,
+
     scy: u8,
     scx: u8,
     ly: u8,
@@ -205,6 +207,7 @@ impl GPU {
                 obj_enable: false,
                 bg_window_priority: false,
             },
+            vblank_interrupt: false,
             bg_palette: BackgroundPalette::new(),
         }
     }
@@ -236,6 +239,7 @@ impl GPU {
 
                     if self.ly == 143 {
                         self.mode = GPUMode::VBlank;
+                        self.vblank_interrupt = true;
                     } else {
                         self.mode = GPUMode::OAMRead;
                     }
@@ -248,6 +252,7 @@ impl GPU {
 
                     if self.ly > 153 {
                         self.mode = GPUMode::OAMRead;
+                        self.vblank_interrupt = false;
                         self.ly = 0;
                     }
                 }

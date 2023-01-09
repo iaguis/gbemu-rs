@@ -2901,16 +2901,41 @@ impl CPU {
             }
         }
 
-        let cycles = self.execute() as u32;
+        let mut cycles = self.execute() as u32;
+
+        if self.ime {
+            let ie = self.memory_bus.read_byte(0xFFFF);
+
+            if (ie & 0x01) == 1 {
+                cycles += self.handle_interrupts()
+            }
+        }
 
         self.clock.m += cycles as u32;
         self.clock.t += (cycles as u32) * 4;
-
         let cycles_t = cycles as u32 * 4;
 
         self.memory_bus.gpu.run(cycles_t.into());
 
         cycles_t as usize
+    }
+
+    pub fn handle_interrupts(&mut self) -> u32 {
+        let interrupt_flag = self.memory_bus.read_byte(0xFF0F);
+
+        if interrupt_flag & 0x01 == 1 {
+            self.reg.sp -= 1;
+            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+            self.reg.sp -= 1;
+            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+
+            self.reg.pc = 0x40;
+
+            self.ime = false;
+            self.memory_bus.write_byte(0xFF0E, 0);
+        }
+
+        5
     }
 
     pub fn drop_to_shell(&mut self) {
