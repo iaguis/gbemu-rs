@@ -212,7 +212,7 @@ impl GPU {
         }
     }
 
-    pub fn run(&mut self, cycles: u32) {
+    pub fn step(&mut self, cycles: u32) {
         self.mode_clock += cycles;
 
         match self.mode {

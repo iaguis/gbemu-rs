@@ -2915,7 +2915,7 @@ impl CPU {
         self.clock.t += (cycles as u32) * 4;
         let cycles_t = cycles as u32 * 4;
 
-        self.memory_bus.gpu.run(cycles_t.into());
+        self.memory_bus.gpu.step(cycles_t.into());
 
         cycles_t as usize
     }
