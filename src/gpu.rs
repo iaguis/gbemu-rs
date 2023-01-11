@@ -31,7 +31,7 @@ pub struct GPU {
     lcd_status: LCDStatus,
 }
 
-#[derive(Clone,Copy)]
+#[derive(Debug,Clone,Copy)]
 pub struct LCDStatus {
     lyc_equals_ly_int: bool,
     oam_int: bool,
@@ -241,7 +241,7 @@ impl From<BackgroundPalette> for u8 {
     }
 }
 
-#[derive(Clone,Copy)]
+#[derive(Debug,Clone,Copy)]
 pub enum GPUMode {
     HBlank,
     VBlank,
