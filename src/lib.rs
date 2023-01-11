@@ -22,7 +22,7 @@ pub struct Emulator {
 }
 
 
-const ONE_SECOND_IN_MICROS: usize = 1000000000;
+const ONE_SECOND_IN_NANOS: usize = 1000000000;
 const ONE_SECOND_IN_CYCLES: usize = 4190000;
 const ONE_FRAME_IN_CYCLES: usize = 70224;
 
@@ -53,7 +53,7 @@ impl Emulator {
 
             let time_delta = now.elapsed().subsec_nanos();
             now = Instant::now();
-            let delta = time_delta as f64 / ONE_SECOND_IN_MICROS as f64;
+            let delta = time_delta as f64 / ONE_SECOND_IN_NANOS as f64;
             let cycles_to_run = delta * ONE_SECOND_IN_CYCLES as f64;
 
             let mut cycles_elapsed = 0;
