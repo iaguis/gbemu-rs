@@ -1978,8 +1978,8 @@ impl CPU {
                                 self.reg.l = r;
                             },
                             PrefixOperand::HLIndirect => {
-                                let c = (self.reg.c & 0x80) >> 7;
                                 let val = self.memory_bus.read_byte(self.reg.hl());
+                                let c = (val & 0x80) >> 7;
                                 let r = val.rotate_left(1) | c;
 
                                 self.reg.set_flag(Flag::Z, r == 0);
