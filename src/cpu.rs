@@ -1026,21 +1026,17 @@ impl CPU {
                     },
 
                     LDType::HLFromSPPlusN => {
-                        let n = self.memory_bus.read_byte(self.reg.pc + 1) as i8 as i16;
-
-                        let res = if n >= 0 {
-                            self.reg.sp.wrapping_add(n as u16)
-                        } else {
-                            self.reg.sp.wrapping_sub(n.abs() as u16)
-                        };
+                        // 2's complement magic
+                        let n = self.memory_bus.read_byte(self.reg.pc + 1) as i8 as i16 as u16;
+                        let res = self.reg.sp.wrapping_add(n);
 
                         self.reg.h = (res >> 8) as u8;
                         self.reg.l = (res & 0xff) as u8;
 
                         self.reg.set_flag(Flag::Z, false);
                         self.reg.set_flag(Flag::N, false);
-                        self.reg.set_flag(Flag::C, (self.reg.sp as i32 & 0xFF) + (n as i32 & 0xFF) > 0xFF);
-                        self.reg.set_flag(Flag::H, (self.reg.sp & 0xF) as i32 + (n & 0xF) as i32 > 0xF);
+                        self.reg.set_flag(Flag::C, (self.reg.sp & 0xFF) + (n & 0xFF) > 0xFF);
+                        self.reg.set_flag(Flag::H, (self.reg.sp & 0xF) + (n & 0xF) > 0xF);
 
                         cycles = 3;
                         self.reg.pc += 2;
