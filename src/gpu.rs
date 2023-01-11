@@ -107,6 +107,34 @@ pub struct LCDC {
     bg_window_priority: bool,
 }
 
+impl From<u8> for LCDC {
+    fn from(value: u8) -> Self {
+        LCDC {
+            lcd_enable: (value & (1 << 7)) != 0,
+            window_tilemap: (value & (1 << 6)) != 0,
+            window_enable: (value & (1 << 5)) != 0,
+            bg_window_addressing_mode: (value & (1 << 4)) != 0,
+            bg_tilemap: (value & (1 << 3)) != 0,
+            obj_size: (value & (1 << 2)) != 0,
+            obj_enable: (value & (1 << 1)) != 0,
+            bg_window_priority: (value & 1) != 0,
+        }
+    }
+}
+
+impl From<LCDC> for u8 {
+    fn from(value: LCDC) -> u8 {
+        (if value.lcd_enable {1} else {0} << 7) |
+        (if value.window_tilemap {1} else {0} << 6) |
+        (if value.window_enable {1} else {0} << 5) |
+        (if value.bg_window_addressing_mode {1} else {0} << 4) |
+        (if value.bg_tilemap {1} else {0} << 3) |
+        (if value.obj_size {1} else {0} << 2) |
+        (if value.obj_enable {1} else {0} << 1) |
+        (if value.bg_window_priority {1} else {0})
+    }
+}
+
 #[derive(Debug,Clone,Copy)]
 pub enum Color {
     White = 255,
@@ -209,35 +237,6 @@ impl From<BackgroundPalette> for u8 {
         (v2 << 4) |
         (v1 << 2) |
         v0
-    }
-}
-
-
-impl From<u8> for LCDC {
-    fn from(value: u8) -> Self {
-        LCDC {
-            lcd_enable: (value & (1 << 7)) != 0,
-            window_tilemap: (value & (1 << 6)) != 0,
-            window_enable: (value & (1 << 5)) != 0,
-            bg_window_addressing_mode: (value & (1 << 4)) != 0,
-            bg_tilemap: (value & (1 << 3)) != 0,
-            obj_size: (value & (1 << 2)) != 0,
-            obj_enable: (value & (1 << 1)) != 0,
-            bg_window_priority: (value & 1) != 0,
-        }
-    }
-}
-
-impl From<LCDC> for u8 {
-    fn from(value: LCDC) -> u8 {
-        (if value.lcd_enable {1} else {0} << 7) |
-        (if value.window_tilemap {1} else {0} << 6) |
-        (if value.window_enable {1} else {0} << 5) |
-        (if value.bg_window_addressing_mode {1} else {0} << 4) |
-        (if value.bg_tilemap {1} else {0} << 3) |
-        (if value.obj_size {1} else {0} << 2) |
-        (if value.obj_enable {1} else {0} << 1) |
-        (if value.bg_window_priority {1} else {0})
     }
 }
 
