@@ -361,7 +361,7 @@ impl GPU {
             },
             0xFF42 => self.scy = val,
             0xFF43 => self.scx = val,
-            0xFF44 => self.ly = val,
+            0xFF44 => { },
             0xFF47 => {
                 self.bg_palette = BackgroundPalette::from(val);
             },
