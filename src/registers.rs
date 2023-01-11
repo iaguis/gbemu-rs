@@ -220,7 +220,7 @@ impl Registers {
     pub fn alu_dec(&mut self, a: u8) -> u8 {
         let r = a.wrapping_sub(1);
         self.set_flag(Flag::Z, r == 0);
-        self.set_flag(Flag::N, false);
+        self.set_flag(Flag::N, true);
         self.set_flag(Flag::H, (a & 0xF) == 0);
 
         r
