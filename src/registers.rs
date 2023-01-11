@@ -111,7 +111,7 @@ impl Registers {
         self.set_flag(Flag::H, (hl & 0x0FFF) + (b & 0x0FFF) > 0x0FFF);
 
         let msb = (r >> 8) as u8;
-        let lsb = (r & 0xf) as u8;
+        let lsb = (r & 0xFF) as u8;
 
         self.h = msb;
         self.l = lsb;
