@@ -118,6 +118,8 @@ impl Registers {
     }
 
     pub fn alu_addsp(&mut self, b: u8) {
+        // the magic of 2's complement: read as unsigned, extend to 16 bits and interpret as
+        // unsigned. Then we do wrapping_add and it's the same as subtracting :mindblown:
         let val = b as i8 as i16 as u16;
         let r = (self.sp).wrapping_add(val);
 
