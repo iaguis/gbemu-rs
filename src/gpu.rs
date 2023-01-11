@@ -31,12 +31,12 @@ pub struct GPU {
 }
 
 pub struct LCDStatus {
-    lycEqualsLyInt: bool,
-    oamInt: bool,
-    vblankInt: bool,
-    hblankInt: bool,
+    lyc_equals_ly_int: bool,
+    oam_int: bool,
+    vblank_int: bool,
+    hblank_int: bool,
 
-    lycEqualsLy: bool,
+    lyc_equals_ly: bool,
     mode: GPUMode,
 }
 
@@ -258,12 +258,12 @@ impl GPU {
                 bg_window_priority: false,
             },
             lcd_status: LCDStatus{
-                lycEqualsLyInt: false,
-                oamInt: false,
-                vblankInt: false,
-                hblankInt: false,
+                lyc_equals_ly_int: false,
+                oam_int: false,
+                vblank_int: false,
+                hblank_int: false,
 
-                lycEqualsLy: false,
+                lyc_equals_ly: false,
                 mode: GPUMode::OAMRead,
             },
             bg_palette: BackgroundPalette::new(),
@@ -303,7 +303,7 @@ impl GPU {
                     if self.ly == 143 {
                         self.lcd_status.mode = GPUMode::VBlank;
                         interrupts_requested.add(GPUInterrupts::VBlank);
-                        if self.lcd_status.vblankInt {
+                        if self.lcd_status.vblank_int {
                             interrupts_requested.add(GPUInterrupts::LCDStat);
                         }
                     } else {
