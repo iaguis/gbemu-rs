@@ -2,6 +2,7 @@ use std::fs::File;
 
 use crate::registers::{Flag,Registers};
 use crate::memory_bus::MemoryBus;
+use crate::gpu::GPUInterrupts;
 
 use crate::debug;
 
@@ -2891,6 +2892,17 @@ impl CPU {
         self.memory_bus.gpu.canvas_buffer.iter()
     }
 
+    pub fn has_interrupt(&self) -> bool {
+        let ie = self.memory_bus.interrupt_enable;
+        let iflag = self.memory_bus.interrupt_flag;
+
+        (ie.vblank && iflag.vblank)
+            || (ie.lcd_stat && iflag.lcd_stat)
+            || (ie.timer && iflag.timer)
+            || (ie.serial && iflag.serial)
+            || (ie.joypad && iflag.joypad)
+    }
+
     // runs one frame
     pub fn step(&mut self) -> usize {
         self.log_debug(format!("emulating..."));
@@ -2917,40 +2929,84 @@ impl CPU {
         }
 
         let mut cycles = self.execute() as u32;
+        let mut cycles_t = cycles as u32 * 4;
 
+        let gpu_interrupts = self.memory_bus.gpu.step(cycles_t.into());
+
+        let (vblank, lcd_stat) = match gpu_interrupts {
+            GPUInterrupts::None => (false, false),
+            GPUInterrupts::VBlank => (true, false),
+            GPUInterrupts::LCDStat => (false, true),
+            GPUInterrupts::Both => (true, true),
+        };
+
+        if vblank {
+            self.memory_bus.interrupt_flag.vblank = true;
+        }
+
+        if lcd_stat {
+            self.memory_bus.interrupt_flag.lcd_stat = true;
+        }
+
+        if self.has_interrupt() {
+            self.is_halted = false;
+        }
+
+        let mut interrupted = false;
         if self.ime {
-            let ie = self.memory_bus.read_byte(0xFFFF);
+            let ie = self.memory_bus.interrupt_enable;
+            let mut iflag = self.memory_bus.interrupt_flag;
 
-            if (ie & 0x01) == 1 {
-                cycles += self.handle_interrupts()
+            if ie.vblank && iflag.vblank {
+                interrupted = true;
+                self.handle_interrupt(0x40);
+                iflag.vblank = false;
             }
+            if ie.lcd_stat && iflag.lcd_stat {
+                interrupted = true;
+                self.handle_interrupt(0x48);
+                iflag.lcd_stat = false;
+            }
+            if ie.timer && iflag.timer {
+                interrupted = true;
+                self.handle_interrupt(0x50);
+                iflag.timer = false;
+            }
+            if ie.serial && iflag.serial {
+                interrupted = true;
+                self.handle_interrupt(0x58);
+                iflag.serial = false;
+            }
+            if ie.joypad && iflag.joypad {
+                interrupted = true;
+                self.handle_interrupt(0x60);
+                iflag.joypad = false;
+            }
+
+            self.memory_bus.write_byte(0xFF0F, iflag.into());
+        }
+
+        if interrupted {
+            cycles += 4;
+            cycles_t += 16;
         }
 
         self.clock.m += cycles as u32;
         self.clock.t += (cycles as u32) * 4;
-        let cycles_t = cycles as u32 * 4;
-
-        self.memory_bus.gpu.step(cycles_t.into());
 
         cycles_t as usize
     }
 
-    pub fn handle_interrupts(&mut self) -> u32 {
-        let interrupt_flag = self.memory_bus.read_byte(0xFF0F);
+    pub fn handle_interrupt(&mut self, address: u16) {
+        self.reg.sp -= 1;
+        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
+        self.reg.sp -= 1;
+        self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
 
-        if interrupt_flag & 0x01 == 1 {
-            self.reg.sp -= 1;
-            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc >> 8) as u8);
-            self.reg.sp -= 1;
-            self.memory_bus.write_byte(self.reg.sp, (self.reg.pc & 0xFF) as u8);
+        self.ime = false;
 
-            self.reg.pc = 0x40;
+        self.reg.pc = address;
 
-            self.ime = false;
-            self.memory_bus.write_byte(0xFF0E, 0);
-        }
-
-        5
     }
 
     pub fn drop_to_shell(&mut self) {

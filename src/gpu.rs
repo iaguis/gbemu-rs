@@ -20,15 +20,66 @@ pub struct GPU {
     pub canvas_buffer: [u32; VIEWPORT_PIXELS + 1],
 
     pub mode_clock: u32,
-    pub mode: GPUMode,
-
-    pub vblank_interrupt: bool,
 
     scy: u8,
     scx: u8,
     ly: u8,
     lcdc: LCDC,
     bg_palette: BackgroundPalette,
+
+    lcd_status: LCDStatus,
+}
+
+pub struct LCDStatus {
+    lycEqualsLyInt: bool,
+    oamInt: bool,
+    vblankInt: bool,
+    hblankInt: bool,
+
+    lycEqualsLy: bool,
+    mode: GPUMode,
+}
+
+#[derive(Clone,Copy,PartialEq)]
+pub enum GPUInterrupts {
+    None,
+    VBlank,
+    LCDStat,
+    Both,
+}
+
+impl GPUInterrupts {
+    pub fn add(&mut self, new_request: GPUInterrupts) {
+        match self {
+            GPUInterrupts::None => *self = new_request,
+            GPUInterrupts::VBlank if new_request == GPUInterrupts::LCDStat => {
+                *self = GPUInterrupts::Both
+            },
+            GPUInterrupts::LCDStat if new_request == GPUInterrupts::VBlank => {
+                *self = GPUInterrupts::Both
+            },
+            _ => {},
+        }
+    }
+
+    pub fn del(&mut self, del_request: GPUInterrupts) {
+        match self {
+            GPUInterrupts::None => {}
+            GPUInterrupts::LCDStat if del_request == GPUInterrupts::LCDStat => {
+                *self = GPUInterrupts::None
+            },
+            GPUInterrupts::VBlank if del_request == GPUInterrupts::VBlank => {
+                *self = GPUInterrupts::None
+            },
+            GPUInterrupts::Both if del_request == GPUInterrupts::VBlank => {
+                *self = GPUInterrupts::LCDStat
+            }
+            GPUInterrupts::Both if del_request == GPUInterrupts::LCDStat => {
+                *self = GPUInterrupts::VBlank
+            }
+            _ => {},
+        }
+    }
 }
 
 #[derive(Clone,Copy)]
@@ -192,7 +243,6 @@ impl GPU {
             canvas_buffer: [0; VIEWPORT_PIXELS+1],
 
             mode_clock: 0,
-            mode: GPUMode::OAMRead,
 
             scx: 0,
             scy: 0,
@@ -207,25 +257,38 @@ impl GPU {
                 obj_enable: false,
                 bg_window_priority: false,
             },
-            vblank_interrupt: false,
+            lcd_status: LCDStatus{
+                lycEqualsLyInt: false,
+                oamInt: false,
+                vblankInt: false,
+                hblankInt: false,
+
+                lycEqualsLy: false,
+                mode: GPUMode::OAMRead,
+            },
             bg_palette: BackgroundPalette::new(),
         }
     }
 
-    pub fn step(&mut self, cycles: u32) {
+    pub fn step(&mut self, cycles: u32) -> GPUInterrupts {
+        let mut interrupts_requested = GPUInterrupts::None;
+        if !self.lcdc.lcd_enable {
+            return interrupts_requested;
+        }
+
         self.mode_clock += cycles;
 
-        match self.mode {
+        match self.lcd_status.mode {
             GPUMode::OAMRead => {
                 if self.mode_clock >= 80 {
                     self.mode_clock = 0;
-                    self.mode = GPUMode::VRAMRead;
+                    self.lcd_status.mode = GPUMode::VRAMRead;
                 }
             },
             GPUMode::VRAMRead => {
                 if self.mode_clock >= 172 {
                     self.mode_clock = 0;
-                    self.mode = GPUMode::HBlank;
+                    self.lcd_status.mode = GPUMode::HBlank;
 
                     if self.lcdc.lcd_enable {
                         self.render_scan();
@@ -238,10 +301,13 @@ impl GPU {
                     self.ly += 1;
 
                     if self.ly == 143 {
-                        self.mode = GPUMode::VBlank;
-                        self.vblank_interrupt = true;
+                        self.lcd_status.mode = GPUMode::VBlank;
+                        interrupts_requested.add(GPUInterrupts::VBlank);
+                        if self.lcd_status.vblankInt {
+                            interrupts_requested.add(GPUInterrupts::LCDStat);
+                        }
                     } else {
-                        self.mode = GPUMode::OAMRead;
+                        self.lcd_status.mode = GPUMode::OAMRead;
                     }
                 }
             },
@@ -251,13 +317,14 @@ impl GPU {
                     self.ly += 1;
 
                     if self.ly > 153 {
-                        self.mode = GPUMode::OAMRead;
-                        self.vblank_interrupt = false;
+                        self.lcd_status.mode = GPUMode::OAMRead;
                         self.ly = 0;
                     }
                 }
             }
         }
+
+        interrupts_requested
     }
 
     // GB has a weird way to store pixels. Each row has 2 bytes, and to get the tile pixel color

@@ -8,7 +8,56 @@ pub struct MemoryBus {
     memory: Memory,
     io: IO,
     pub gpu: GPU,
-    interrupt_enable: u8,
+    pub interrupt_enable: Interrupts,
+    pub interrupt_flag: Interrupts,
+}
+
+#[derive(Clone,Copy)]
+pub struct Interrupts {
+    pub vblank: bool,
+    pub lcd_stat: bool,
+    pub timer: bool,
+    pub serial: bool,
+    pub joypad: bool,
+}
+
+impl Interrupts {
+    pub fn new() -> Interrupts {
+        Interrupts {
+            vblank: false,
+            lcd_stat: false,
+            timer: false,
+            serial: false,
+            joypad: false,
+        }
+    }
+}
+
+impl From<u8> for Interrupts {
+    fn from(val: u8) -> Interrupts {
+        Interrupts {
+            vblank: val & 0x1 != 0,
+            lcd_stat: val & 0x2 != 0,
+            timer: val & 0x4 != 0,
+            serial: val & 0x8 != 0,
+            joypad: val & 0x10 != 0,
+        }
+    }
+}
+
+impl From<Interrupts> for u8 {
+    fn from(val: Interrupts) -> u8 {
+        let joypad = if val.joypad { 1 } else { 0 };
+        let lcd_stat = if val.lcd_stat { 1 } else { 0 };
+        let timer = if val.timer { 1 } else { 0 };
+        let serial = if val.serial { 1 } else { 0 };
+        let vblank = if val.vblank { 1 } else { 0 };
+        joypad << 4 |
+            lcd_stat << 3 |
+            timer << 2 |
+            serial << 1 |
+            vblank
+    }
 }
 
 impl MemoryBus {
@@ -17,7 +66,8 @@ impl MemoryBus {
             memory: Memory::new(),
             gpu: GPU::new(),
             io: IO::new(),
-            interrupt_enable: 0,
+            interrupt_enable: Interrupts::new(),
+            interrupt_flag: Interrupts::new(),
         }
     }
 
@@ -38,10 +88,7 @@ impl MemoryBus {
             0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
             0xFF00..=0xFF0E => self.io.read_byte(address),
-            0xFF0F => {
-                let vblank_interrupt = if self.gpu.vblank_interrupt {1} else {0};
-                vblank_interrupt
-            },
+            0xFF0F => { self.interrupt_flag.into() },
             0xFF10..=0xFF3F => self.io.read_byte(address),
             0xFF40..=0xFF4F => self.gpu.read_byte(address),
             0xFF51..=0xFF7F => self.io.read_byte(address),
@@ -53,7 +100,7 @@ impl MemoryBus {
                 }
             }
             0xFF80..=0xFFFE => self.memory.read_byte(address),
-            0xFFFF => { self.interrupt_enable },
+            0xFFFF => { self.interrupt_enable.into() },
         }
     }
 
@@ -67,13 +114,7 @@ impl MemoryBus {
             0xFE00..=0xFE9F => { /* TODO OAM */ },
             0xFEA0..=0xFEFF => { /* Not Usable */ },
             0xFF00..=0xFF0E => self.io.write_byte(address, val),
-            0xFF0F => {
-                if val == 0 {
-                    self.gpu.vblank_interrupt = false;
-                } else {
-                    self.gpu.vblank_interrupt = true;
-                }
-            },
+            0xFF0F => { self.interrupt_flag = val.into() },
             0xFF10..=0xFF3F => self.io.write_byte(address, val),
             0xFF40..=0xFF4F => self.gpu.write_byte(address, val),
             0xFF50 => {
@@ -83,7 +124,7 @@ impl MemoryBus {
             }
             0xFF51..=0xFF7F => self.io.write_byte(address, val),
             0xFF80..=0xFFFE => self.memory.write_byte(address, val),
-            0xFFFF => { self.interrupt_enable = val; },
+            0xFFFF => { self.interrupt_enable = val.into() },
         }
     }
 }
