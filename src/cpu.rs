@@ -1038,7 +1038,7 @@ impl CPU {
 
                         self.reg.set_flag(Flag::Z, false);
                         self.reg.set_flag(Flag::N, false);
-                        self.reg.set_flag(Flag::C, (self.reg.sp as i32 + n as i32) > 0xFF);
+                        self.reg.set_flag(Flag::C, (self.reg.sp as i32 & 0xFF) + (n as i32 & 0xFF) > 0xFF);
                         self.reg.set_flag(Flag::H, (self.reg.sp & 0xF) as i32 + (n & 0xF) as i32 > 0xF);
 
                         cycles = 3;
