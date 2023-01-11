@@ -214,14 +214,7 @@ impl Registers {
     }
 
     pub fn alu_inc16(&mut self, a: u16) -> u16 {
-        let r = a.wrapping_add(1);
-
-        self.set_flag(Flag::Z, r == 0);
-        self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, (a & 0xF) == 0xF);
-        self.set_flag(Flag::C, (a & 0xFF) == 0xFF);
-
-        r
+        a.wrapping_add(1)
     }
 
     pub fn alu_dec(&mut self, a: u8) -> u8 {
@@ -234,14 +227,7 @@ impl Registers {
     }
 
     pub fn alu_dec16(&mut self, a: u16) -> u16 {
-        let r = a.wrapping_sub(1);
-
-        self.set_flag(Flag::Z, r == 0);
-        self.set_flag(Flag::N, false);
-        self.set_flag(Flag::H, (a & 0xF) == 0);
-        self.set_flag(Flag::C, (a & 0xFF) == 0);
-
-        r
+        a.wrapping_sub(1)
     }
 
     pub fn alu_cpl(&mut self) {
