@@ -93,25 +93,6 @@ impl GPUInterrupts {
             _ => {},
         }
     }
-
-    pub fn del(&mut self, del_request: GPUInterrupts) {
-        match self {
-            GPUInterrupts::None => {}
-            GPUInterrupts::LCDStat if del_request == GPUInterrupts::LCDStat => {
-                *self = GPUInterrupts::None
-            },
-            GPUInterrupts::VBlank if del_request == GPUInterrupts::VBlank => {
-                *self = GPUInterrupts::None
-            },
-            GPUInterrupts::Both if del_request == GPUInterrupts::VBlank => {
-                *self = GPUInterrupts::LCDStat
-            }
-            GPUInterrupts::Both if del_request == GPUInterrupts::LCDStat => {
-                *self = GPUInterrupts::VBlank
-            }
-            _ => {},
-        }
-    }
 }
 
 #[derive(Clone,Copy)]
