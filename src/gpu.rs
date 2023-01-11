@@ -51,7 +51,7 @@ impl From<u8> for LCDStatus {
             vblank_int: (value >> 4) & 0x01 == 1,
             hblank_int: (value >> 3) & 0x01 == 1,
             lyc_equals_ly: false,
-            mode: GPUMode::OAMRead,
+            mode: GPUMode::HBlank,
         }
     }
 }
@@ -279,7 +279,7 @@ impl GPU {
                 hblank_int: false,
 
                 lyc_equals_ly: false,
-                mode: GPUMode::OAMRead,
+                mode: GPUMode::HBlank,
             },
             bg_palette: BackgroundPalette::new(),
         }
