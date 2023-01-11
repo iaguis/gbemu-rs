@@ -2643,7 +2643,8 @@ impl CPU {
                     }
                     PrefixedOpcode::BIT(operand, position) => {
                         let &reg;
-                        let hl_byte = self.memory_bus.read_byte(self.reg.hl());
+                        let hl_address = self.reg.hl();
+                        let hl_byte = self.memory_bus.read_byte(hl_address);
 
                         match operand {
                             PrefixOperand::A => {
@@ -2732,13 +2733,18 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => {
+                                self.memory_bus.write_byte(hl_address, hl_byte);
+                                cycles = 4;
+                                self.reg.pc += 1;
+                            },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     }
                     PrefixedOpcode::RES(operand, position) => {
                         let reg: &mut u8;
-                        let mut hl_byte = self.memory_bus.read_byte(self.reg.hl());
+                        let hl_address = self.reg.hl();
+                        let mut hl_byte = self.memory_bus.read_byte(hl_address);
 
                         match operand {
                             PrefixOperand::A => {
@@ -2795,13 +2801,18 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => {
+                                self.memory_bus.write_byte(hl_address, hl_byte);
+                                cycles = 4;
+                                self.reg.pc += 1;
+                            },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
                     PrefixedOpcode::SET(operand, position) => {
                         let reg: &mut u8;
-                        let mut hl_byte = self.memory_bus.read_byte(self.reg.hl());
+                        let hl_address = self.reg.hl();
+                        let mut hl_byte = self.memory_bus.read_byte(hl_address);
 
                         match operand {
                             PrefixOperand::A => {
@@ -2858,7 +2869,11 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => {
+                                self.memory_bus.write_byte(hl_address, hl_byte);
+                                cycles = 4;
+                                self.reg.pc += 1;
+                            },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
