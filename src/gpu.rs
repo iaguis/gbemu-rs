@@ -30,6 +30,7 @@ pub struct GPU {
     lcd_status: LCDStatus,
 }
 
+#[derive(Clone,Copy)]
 pub struct LCDStatus {
     lyc_equals_ly_int: bool,
     oam_int: bool,
@@ -38,6 +39,37 @@ pub struct LCDStatus {
 
     lyc_equals_ly: bool,
     mode: GPUMode,
+}
+
+impl From<u8> for LCDStatus {
+    // Sets lycEqualsLy and mode to 0 since they're read-only
+    fn from(value: u8) -> LCDStatus {
+        LCDStatus {
+            lyc_equals_ly_int: (value >> 6) & 0x01 == 1,
+            oam_int: (value >> 5) & 0x01 == 1,
+            vblank_int: (value >> 4) & 0x01 == 1,
+            hblank_int: (value >> 3) & 0x01 == 1,
+            lyc_equals_ly: false,
+            mode: GPUMode::OAMRead,
+        }
+    }
+}
+
+impl From<LCDStatus> for u8 {
+    fn from(value: LCDStatus) -> u8 {
+        let ret = (if value.lyc_equals_ly_int {1} else {0} << 6) |
+        (if value.oam_int {1} else {0} << 5) |
+        (if value.vblank_int {1} else {0} << 4) |
+        (if value.hblank_int {1} else {0} << 3) |
+        (if value.lyc_equals_ly {1} else {0} << 2);
+
+        match value.mode {
+            GPUMode::HBlank => { ret },
+            GPUMode::VBlank => { ret | 0x1 },
+            GPUMode::OAMRead => { ret | 0x2 },
+            GPUMode::VRAMRead => { ret | 0x3 },
+        }
+    }
 }
 
 #[derive(Clone,Copy,PartialEq)]
@@ -228,6 +260,7 @@ impl From<LCDC> for u8 {
     }
 }
 
+#[derive(Clone,Copy)]
 pub enum GPUMode {
     HBlank,
     VBlank,
