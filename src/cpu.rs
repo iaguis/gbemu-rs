@@ -1992,7 +1992,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2083,7 +2083,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2174,7 +2174,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2266,7 +2266,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2357,7 +2357,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2455,7 +2455,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2545,7 +2545,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     },
@@ -2637,7 +2637,7 @@ impl CPU {
                         }
 
                         match operand {
-                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 2; },
+                            PrefixOperand::HLIndirect => { cycles = 4; self.reg.pc += 1; },
                             _ => { cycles = 2; self.reg.pc += 1; },
                         }
                     }
