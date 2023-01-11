@@ -24,6 +24,7 @@ pub struct GPU {
     scy: u8,
     scx: u8,
     ly: u8,
+    lyc: u8,
     lcdc: LCDC,
     bg_palette: BackgroundPalette,
 
@@ -260,6 +261,7 @@ impl GPU {
             scx: 0,
             scy: 0,
             ly: 0,
+            lyc: 0,
             lcdc: LCDC{
                 lcd_enable: false,
                 window_tilemap: false,
@@ -303,6 +305,10 @@ impl GPU {
                     self.mode_clock = 0;
                     self.lcd_status.mode = GPUMode::HBlank;
 
+                    if self.lcd_status.hblank_int {
+                        interrupts_requested.add(GPUInterrupts::LCDStat);
+                    }
+
                     if self.lcdc.lcd_enable {
                         self.render_scan();
                     }
@@ -335,6 +341,18 @@ impl GPU {
                     }
                 }
             }
+        }
+
+        if self.ly == self.lyc {
+            if self.lcd_status.lyc_equals_ly_int && !self.lcd_status.lyc_equals_ly {
+                interrupts_requested.add(GPUInterrupts::LCDStat);
+            }
+            self.lcd_status.lyc_equals_ly = true;
+        } else {
+            if self.lcd_status.lyc_equals_ly_int && self.lcd_status.lyc_equals_ly {
+                interrupts_requested.add(GPUInterrupts::LCDStat);
+            }
+            self.lcd_status.lyc_equals_ly = false;
         }
 
         interrupts_requested
@@ -422,9 +440,11 @@ impl GPU {
         match address {
             0x8000..=0x9FFF => self.video_ram[address as usize - 0x8000],
             0xFF40 => self.lcdc.into(),
+            0xFF41 => self.lcd_status.into(),
             0xFF42 => self.scy,
             0xFF43 => self.scx,
             0xFF44 => self.ly,
+            0xFF45 => self.lyc,
             0xFF47 => self.bg_palette.into(),
             _ => { 0 /* TODO */ },
         }
@@ -439,9 +459,13 @@ impl GPU {
             0xFF40 => {
                 self.lcdc = LCDC::from(val);
             },
+            0xFF41 => {
+                self.lcd_status = LCDStatus::from(val);
+            },
             0xFF42 => self.scy = val,
             0xFF43 => self.scx = val,
             0xFF44 => { },
+            0xFF45 => { self.lyc = val; },
             0xFF47 => {
                 self.bg_palette = BackgroundPalette::from(val);
             },
