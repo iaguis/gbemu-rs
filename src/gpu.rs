@@ -460,7 +460,10 @@ impl GPU {
                 self.lcdc = LCDC::from(val);
             },
             0xFF41 => {
-                self.lcd_status = LCDStatus::from(val);
+                let mut new_status = LCDStatus::from(val);
+                new_status.lyc_equals_ly =  self.lcd_status.lyc_equals_ly;
+                new_status.mode =  self.lcd_status.mode;
+                self.lcd_status = new_status;
             },
             0xFF42 => self.scy = val,
             0xFF43 => self.scx = val,
