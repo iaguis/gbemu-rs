@@ -1,4 +1,5 @@
 const VIDEO_RAM_SIZE: usize = 0x1FFF;
+const OAM_SIZE: usize = 0x9F;
 const VIEWPORT_PIXELS: usize = 160*144;
 
 #[derive(Clone,Copy)]
@@ -14,9 +15,47 @@ impl Tile {
     }
 }
 
+#[derive(Debug,Clone,Copy)]
+pub struct Obj {
+    y: i16,
+    x: i16,
+    tile: u8,
+    attributes: ObjAttributes,
+}
+
+#[derive(Debug,Clone,Copy)]
+pub struct ObjAttributes {
+    bg_win_over_obj: bool,
+    y_flip: bool,
+    x_flip: bool,
+    palette: bool,
+
+    // GBC fields
+    // tile_vram_bank: bool,
+    // palette_number: 2*bool,
+}
+
+impl Obj {
+    pub fn new() -> Obj {
+        Obj {
+            y: 0,
+            x: 0,
+            tile: 0,
+            attributes: ObjAttributes{
+                bg_win_over_obj: false,
+                y_flip: false,
+                x_flip: false,
+                palette: false,
+            },
+        }
+    }
+}
+
 pub struct GPU {
     pub tile_set: [Tile; 384],
     pub video_ram: [u8; VIDEO_RAM_SIZE + 1],
+    pub oam: [u8; OAM_SIZE + 1],
+    pub obj_set: [Obj; 40],
     pub canvas_buffer: [u32; VIEWPORT_PIXELS + 1],
 
     pub mode_clock: u32,
@@ -26,7 +65,9 @@ pub struct GPU {
     ly: u8,
     lyc: u8,
     lcdc: LCDC,
-    bg_palette: BackgroundPalette,
+    bg_palette: Palette,
+    obj0_palette: Palette,
+    obj1_palette: Palette,
 
     lcd_status: LCDStatus,
 }
@@ -136,7 +177,7 @@ impl From<LCDC> for u8 {
     }
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(PartialEq,Debug,Clone,Copy)]
 pub enum Color {
     White = 255,
     LightGray = 192,
@@ -179,11 +220,11 @@ impl From<Color> for u8 {
 }
 
 #[derive(Clone,Copy)]
-pub struct BackgroundPalette(Color, Color, Color, Color);
+pub struct Palette(Color, Color, Color, Color);
 
-impl BackgroundPalette {
-    fn new() -> BackgroundPalette {
-        BackgroundPalette(
+impl Palette {
+    fn new() -> Palette {
+        Palette(
             Color::White,
             Color::LightGray,
             Color::DarkGray,
@@ -192,9 +233,9 @@ impl BackgroundPalette {
     }
 }
 
-impl From<u8> for BackgroundPalette {
+impl From<u8> for Palette {
      fn from(value: u8) -> Self {
-        BackgroundPalette(
+        Palette(
             (value & 0b11).into(),
             ((value >> 2) & 0b11).into(),
             ((value >> 4) & 0b11).into(),
@@ -203,9 +244,9 @@ impl From<u8> for BackgroundPalette {
      }
 }
 
-impl From<BackgroundPalette> for u8 {
+impl From<Palette> for u8 {
     // TODO fix this ugliness
-    fn from(value: BackgroundPalette) -> u8 {
+    fn from(value: Palette) -> u8 {
         let v3 = match value.3 {
             Color::White => 0,
             Color::LightGray => 1,
@@ -253,7 +294,9 @@ impl GPU {
     pub fn new() -> GPU {
         GPU {
             tile_set: [Tile::new(); 384],
+            obj_set: [Obj::new(); 40],
             video_ram: [0; VIDEO_RAM_SIZE+1],
+            oam: [0; OAM_SIZE+1],
             canvas_buffer: [0; VIEWPORT_PIXELS+1],
 
             mode_clock: 0,
@@ -281,7 +324,9 @@ impl GPU {
                 lyc_equals_ly: false,
                 mode: GPUMode::HBlank,
             },
-            bg_palette: BackgroundPalette::new(),
+            bg_palette: Palette::new(),
+            obj0_palette: Palette::new(),
+            obj1_palette: Palette::new(),
         }
     }
 
@@ -385,6 +430,29 @@ impl GPU {
         }
     }
 
+    pub fn update_object(&mut self, address: usize, val: u8) {
+        let address = address & 0x1FF;
+        // objects take 4 bytes
+        let obj_idx = address >> 2;
+
+        if obj_idx < 40 {
+            let obj_byte = address & 0x3;
+
+            match obj_byte {
+                0 => self.obj_set[obj_idx].y = (val as i16) - 16,
+                1 => self.obj_set[obj_idx].x = (val as i16) - 8,
+                2 => self.obj_set[obj_idx].tile = val,
+                3 => {
+                    self.obj_set[obj_idx].attributes.bg_win_over_obj = (val & 0x80) != 0;
+                    self.obj_set[obj_idx].attributes.y_flip = (val & 0x40) != 0;
+                    self.obj_set[obj_idx].attributes.x_flip = (val & 0x20) != 0;
+                    self.obj_set[obj_idx].attributes.palette = (val & 0x10) != 0;
+                },
+                _ => { },
+            }
+        }
+    }
+
     fn get_color(&self, val: u8) -> Color {
         match val {
             0 => self.bg_palette.0,
@@ -395,12 +463,24 @@ impl GPU {
         }
     }
 
+    fn get_obj_color(&self, val: u8, palette: bool) -> Color {
+        match val {
+            0 => if palette { self.obj1_palette.0 } else { self.obj0_palette.0 }
+            1 => if palette { self.obj1_palette.1 } else { self.obj0_palette.1 }
+            2 => if palette { self.obj1_palette.2 } else { self.obj0_palette.2 }
+            3 => if palette { self.obj1_palette.3 } else { self.obj0_palette.3 }
+            _ => panic!("Cannot convert {} to color", val),
+        }
+    }
+
+
     fn render_scan(&mut self) {
         let base_address: u16 = if self.lcdc.bg_tilemap { 0x1C00 } else { 0x1800 };
         let scy = self.scy as u16;
         let scx = self.scx as u16;
         let ly = self.ly as u16;
         let tile_map_y = ((scy + ly) & 0xff) >> 3;
+        let mut pixel = [0; 160];
 
         let visible_offset = base_address + (tile_map_y * 32);
         let mut line_offset = (self.scx as u16) >> 3;
@@ -416,8 +496,9 @@ impl GPU {
             tile += 256;
         }
 
-        for _ in 0..160 {
-            let color = self.get_color(self.tile_set[tile as usize].data[y as usize][x as usize]);
+        for i in 0..160 {
+            pixel[i] = self.tile_set[tile as usize].data[y as usize][x as usize];
+            let color = self.get_color(pixel[i]);
 
             self.canvas_buffer[canvas_offset] = color.to_rgb();
             canvas_offset += 1;
@@ -434,11 +515,61 @@ impl GPU {
                 }
             }
         }
+
+        // Render OAM
+        if self.lcdc.obj_enable {
+            let mut rendered_objects = 0;
+            for obj in self.obj_set.iter() {
+                // only 10 objects rendered per scan-line
+                if rendered_objects > 10 {
+                    break;
+                }
+
+                if obj.y <= (self.ly as i16) && (self.ly as i16) < (obj.y + 8) {
+                    rendered_objects += 1;
+
+                    let mut canvas_offset: i16 = ly as i16 * 160 + obj.x;
+
+                    let tile_y = if !obj.attributes.y_flip {
+                        self.ly as i16 - obj.y
+                    } else {
+                        7 - (self.ly as i16 - obj.y)
+                    };
+
+                    for x in 0..8 {
+                        let tile_x = if !obj.attributes.x_flip {
+                            x
+                        } else {
+                            7 - x
+                        };
+
+                        let color_idx = self.tile_set[obj.tile as usize].data[tile_y as usize][tile_x as usize];
+                        if color_idx == 0 {
+                            // color 0 is transparent, don't render anything
+                            canvas_offset += 1;
+                            continue;
+                        }
+
+                        let color = self.get_obj_color(color_idx, obj.attributes.palette);
+
+                        if ((obj.x + x) >= 0)
+                            && ((obj.x + x) < 160)
+                            && (obj.attributes.bg_win_over_obj || !pixel[(obj.x + x) as usize] != 0) {
+                            self.canvas_buffer[canvas_offset as usize] = color.to_rgb();
+                            canvas_offset += 1;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0x8000..=0x9FFF => self.video_ram[address as usize - 0x8000],
+            0xFE00..=0xFE9F => {
+                self.oam[address as usize - 0xFE00]
+            }
             0xFF40 => self.lcdc.into(),
             0xFF41 => self.lcd_status.into(),
             0xFF42 => self.scy,
@@ -446,6 +577,8 @@ impl GPU {
             0xFF44 => self.ly,
             0xFF45 => self.lyc,
             0xFF47 => self.bg_palette.into(),
+            0xFF48 => self.obj0_palette.into(),
+            0xFF49 => self.obj1_palette.into(),
             _ => { 0 /* TODO */ },
         }
     }
@@ -456,6 +589,10 @@ impl GPU {
                 self.video_ram[address as usize - 0x8000] = val;
                 self.update_tile(address as usize);
             },
+            0xFE00..=0xFE9F => {
+                self.oam[address as usize - 0xFE00] = val;
+                self.update_object(address as usize, val);
+            }
             0xFF40 => {
                 self.lcdc = LCDC::from(val);
             },
@@ -470,8 +607,14 @@ impl GPU {
             0xFF44 => { },
             0xFF45 => { self.lyc = val; },
             0xFF47 => {
-                self.bg_palette = BackgroundPalette::from(val);
+                self.bg_palette = Palette::from(val);
             },
+            0xFF48 => {
+                self.obj0_palette = Palette::from(val);
+            }
+            0xFF49 => {
+                self.obj1_palette = Palette::from(val);
+            }
             _ => { /* TODO */ },
         }
     }

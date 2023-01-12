@@ -8,6 +8,7 @@ pub struct MemoryBus {
     memory: Memory,
     io: IO,
     pub gpu: GPU,
+    pub dma: u8,
     pub interrupt_enable: Interrupts,
     pub interrupt_flag: Interrupts,
 }
@@ -65,6 +66,7 @@ impl MemoryBus {
         MemoryBus {
             memory: Memory::new(),
             gpu: GPU::new(),
+            dma: 0,
             io: IO::new(),
             interrupt_enable: Interrupts::new(),
             interrupt_flag: Interrupts::new(),
@@ -79,18 +81,30 @@ impl MemoryBus {
         self.memory.read_boot_rom(f)
     }
 
+    fn dma_transfer(&mut self) {
+        let source: u16 = ((self.dma as u16) << 8) & 0xDF00;
+
+        for obj in 0..0x9F {
+            let obj_address = source + obj as u16;
+            self.gpu.oam[obj] = self.read_byte(obj_address);
+            self.write_byte(0xFE00 + obj as u16, self.gpu.oam[obj]);
+        }
+    }
+
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
             0..=0x7FFF => self.memory.read_byte(address),
             0x8000..=0x9FFF => self.gpu.read_byte(address),
             0xA000..=0xDFFF => self.memory.read_byte(address),
             0xE000..=0xFDFF => self.memory.read_byte(address - 0x2000),
-            0xFE00..=0xFE9F => { 0 /* TODO OAM */ },
+            0xFE00..=0xFE9F => { self.gpu.read_byte(address) },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
             0xFF00..=0xFF0E => self.io.read_byte(address),
             0xFF0F => { self.interrupt_flag.into() },
             0xFF10..=0xFF3F => self.io.read_byte(address),
-            0xFF40..=0xFF4F => self.gpu.read_byte(address),
+            0xFF40..=0xFF45 => self.gpu.read_byte(address),
+            0xFF46 => self.dma,
+            0xFF47..=0xFF4F => self.gpu.read_byte(address),
             0xFF51..=0xFF7F => self.io.read_byte(address),
             0xFF50 => {
                 if self.memory.expose_boot_rom {
@@ -111,12 +125,17 @@ impl MemoryBus {
             0x8000..=0x9FFF => self.gpu.write_byte(address, val),
             0xA000..=0xDFFF => self.memory.write_byte(address, val),
             0xE000..=0xFDFF => { },
-            0xFE00..=0xFE9F => { /* TODO OAM */ },
+            0xFE00..=0xFE9F => self.gpu.write_byte(address, val),
             0xFEA0..=0xFEFF => { /* Not Usable */ },
             0xFF00..=0xFF0E => self.io.write_byte(address, val),
             0xFF0F => { self.interrupt_flag = val.into() },
             0xFF10..=0xFF3F => self.io.write_byte(address, val),
-            0xFF40..=0xFF4F => self.gpu.write_byte(address, val),
+            0xFF40..=0xFF45 => self.gpu.write_byte(address, val),
+            0xFF46 => {
+                self.dma = val;
+                self.dma_transfer();
+            },
+            0xFF47..=0xFF4F => self.gpu.write_byte(address, val),
             0xFF50 => {
                 if val != 0 && self.memory.expose_boot_rom {
                     self.memory.expose_boot_rom = false;
