@@ -14,7 +14,6 @@ pub struct CPU {
     pub breakpoints: Vec<u16>,
     pub clock: Clock,
 
-    // is this all we need for HALT?
     is_halted: bool,
     ime: bool,
     debug: bool,
