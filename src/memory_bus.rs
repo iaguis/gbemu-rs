@@ -1,12 +1,14 @@
 use std::{fs, io};
 
 use crate::gpu::GPU;
-use crate::io::IO;
 use crate::memory::Memory;
+use crate::keys::Keys;
 
 pub struct MemoryBus {
     memory: Memory,
-    pub io: IO,
+    pub joypad: Keys,
+    serial: u8,
+    serial_control: u8,
     pub gpu: GPU,
     pub dma: u8,
     pub interrupt_enable: Interrupts,
@@ -67,7 +69,9 @@ impl MemoryBus {
             memory: Memory::new(),
             gpu: GPU::new(),
             dma: 0,
-            io: IO::new(),
+            joypad: Keys::new(),
+            serial: 0,
+            serial_control: 0,
             interrupt_enable: Interrupts::new(),
             interrupt_flag: Interrupts::new(),
         }
@@ -99,13 +103,19 @@ impl MemoryBus {
             0xE000..=0xFDFF => self.memory.read_byte(address - 0x2000),
             0xFE00..=0xFE9F => { self.gpu.read_byte(address) },
             0xFEA0..=0xFEFF => { 0 /* Not Usable */ },
-            0xFF00..=0xFF0E => self.io.read_byte(address),
+            0xFF00 => self.joypad.read_byte(),
+            0xFF01 => self.serial,
+            0xFF02 => self.serial_control,
+            0xFF03..=0xFF0E => { 0 /* ??? */ },
             0xFF0F => { self.interrupt_flag.into() },
-            0xFF10..=0xFF3F => self.io.read_byte(address),
+            0xFF10..=0xFF26 => { 0 /* TODO: audio */ },
+            0xFF27..=0xFF2F => { 0xFF /* TODO: audio */ },
+            0xFF30..=0xFF3F => { 0 /* TODO: audio */ },
+            0xFF4C..=0xFF4E => { 0 /* ??? */ },
             0xFF40..=0xFF45 => self.gpu.read_byte(address),
             0xFF46 => self.dma,
             0xFF47..=0xFF4F => self.gpu.read_byte(address),
-            0xFF51..=0xFF7F => self.io.read_byte(address),
+            0xFF51..=0xFF7F => { 0 /* ??? */ },
             0xFF50 => {
                 if self.memory.expose_boot_rom {
                     0
@@ -127,9 +137,18 @@ impl MemoryBus {
             0xE000..=0xFDFF => { },
             0xFE00..=0xFE9F => self.gpu.write_byte(address, val),
             0xFEA0..=0xFEFF => { /* Not Usable */ },
-            0xFF00..=0xFF0E => self.io.write_byte(address, val),
+            0xFF00 => self.joypad.write_byte(val),
+            0xFF01 => self.serial = val,
+            0xFF02 => {
+                print!("{}", self.serial as char);
+                self.serial_control = 0;
+            },
+            0xFF03..=0xFF0E => { /* ??? */ },
             0xFF0F => { self.interrupt_flag = val.into() },
-            0xFF10..=0xFF3F => self.io.write_byte(address, val),
+            0xFF10..=0xFF26 => { /* TODO: audio */ },
+            0xFF27..=0xFF2F => { },
+            0xFF30..=0xFF3F => { /* TODO: audio */ },
+            0xFF4C..=0xFF4E => { /* ??? */ },
             0xFF40..=0xFF45 => self.gpu.write_byte(address, val),
             0xFF46 => {
                 self.dma = val;
@@ -141,7 +160,7 @@ impl MemoryBus {
                     self.memory.expose_boot_rom = false;
                 }
             }
-            0xFF51..=0xFF7F => self.io.write_byte(address, val),
+            0xFF51..=0xFF7F => { /* ??? */ },
             0xFF80..=0xFFFE => self.memory.write_byte(address, val),
             0xFFFF => { self.interrupt_enable = val.into() },
         }

@@ -11,7 +11,6 @@ mod memory;
 mod memory_bus;
 mod cpu;
 mod gpu;
-mod io;
 mod keys;
 mod debug;
 
@@ -119,9 +118,9 @@ impl Emulator {
 
                 for k in keys.iter() {
                     if k.state {
-                        self.cpu.memory_bus.io.joypad.key_down(&k.key);
+                        self.cpu.memory_bus.joypad.key_down(&k.key);
                     } else {
-                        self.cpu.memory_bus.io.joypad.key_up(&k.key);
+                        self.cpu.memory_bus.joypad.key_up(&k.key);
                     }
                 }
 
