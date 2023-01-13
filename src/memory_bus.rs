@@ -6,7 +6,7 @@ use crate::memory::Memory;
 
 pub struct MemoryBus {
     memory: Memory,
-    io: IO,
+    pub io: IO,
     pub gpu: GPU,
     pub dma: u8,
     pub interrupt_enable: Interrupts,

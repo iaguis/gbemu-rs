@@ -1,5 +1,7 @@
+use crate::keys::Keys;
+
 pub struct IO {
-    joypad: u8,
+    pub joypad: Keys,
     serial: u8,
     serial_control: u8,
 
@@ -12,7 +14,7 @@ pub struct IO {
 impl IO {
     pub fn new() -> IO {
         IO {
-            joypad: 0,
+            joypad: Keys::new(),
             serial: 0,
             serial_control: 0,
             div: 0,
@@ -24,7 +26,7 @@ impl IO {
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0xFF00 => self.joypad,
+            0xFF00 => self.joypad.read_byte(),
             0xFF01 => self.serial,
             0xFF02 => self.serial_control,
             0xFF04 => self.div,
@@ -41,7 +43,9 @@ impl IO {
 
     pub fn write_byte(&mut self, address: u16, val: u8) {
         match address {
-            0xFF00 => { self.joypad = val },
+            0xFF00 => {
+                self.joypad.write_byte(val);
+            },
             0xFF01 => {
                 self.serial = val;
             },
