@@ -4,11 +4,146 @@ use crate::gpu::GPU;
 use crate::memory::Memory;
 use crate::keys::Keys;
 
+pub struct InternalClock {
+    main: u32,
+    sub: u32,
+    div: u32,
+}
+
+pub struct Clock {
+    internal: InternalClock,
+
+    pub div: u8,
+    pub tima: u8,
+    pub tma: u8,
+    pub tac: Tac,
+}
+
+#[derive(Clone,Copy)]
+pub enum ClockSelect {
+    Freq4k,
+    Freq256k,
+    Freq64k,
+    Freq16k,
+}
+
+#[derive(Clone,Copy)]
+pub struct Tac {
+    enable: bool,
+    clock_select: ClockSelect,
+}
+
+impl Tac {
+    pub fn new() -> Tac {
+        Tac {
+            enable: false,
+            clock_select: ClockSelect::Freq4k,
+        }
+    }
+}
+
+impl From<u8> for Tac {
+    fn from(value: u8) -> Tac {
+        Tac {
+            enable: (value >> 2 & 0x01) == 1,
+            clock_select: match value & 0x3 {
+                0 => ClockSelect::Freq4k,
+                1 => ClockSelect::Freq256k,
+                2 => ClockSelect::Freq64k,
+                3 => ClockSelect::Freq16k,
+                _ => panic!("wrong frequency"),
+            },
+        }
+    }
+}
+
+impl From<Tac> for u8 {
+    fn from(value: Tac) -> u8 {
+        let enable = if value.enable {1} else {0};
+        let clock_select = match value.clock_select {
+            ClockSelect::Freq4k => 0,
+            ClockSelect::Freq256k => 1,
+            ClockSelect::Freq64k => 2,
+            ClockSelect::Freq16k => 3,
+        };
+
+        enable << 2 | clock_select
+    }
+}
+
+impl Clock {
+    pub fn new() -> Clock {
+        Clock {
+            internal: InternalClock{
+                main: 0,
+                sub: 0,
+                div: 0,
+            },
+            div: 0,
+            tima: 0,
+            tma: 0,
+            tac: Tac::new(),
+        }
+    }
+
+    pub fn inc(&mut self, cycles: u32) -> bool {
+        self.internal.sub += cycles;
+
+        // overflow
+        if self.internal.sub >= 4 {
+            self.internal.main += 1;
+            self.internal.sub -= 4;
+
+            self.internal.div += 1;
+            if self.internal.div == 16 {
+                self.div = self.div.wrapping_add(1);
+                self.internal.div = 0;
+            }
+        }
+
+        self.check()
+    }
+
+    pub fn check(&mut self) -> bool {
+        if !self.tac.enable {
+            return false
+        }
+
+        let threshold = match self.tac.clock_select {
+            ClockSelect::Freq4k => 64,
+            ClockSelect::Freq256k => 1,
+            ClockSelect::Freq64k => 4,
+            ClockSelect::Freq16k => 16,
+        };
+
+        if self.internal.main >= threshold {
+            return self.step();
+        }
+
+        return false;
+    }
+
+    pub fn step(&mut self) -> bool {
+        self.internal.main = 0;
+        let overflow: bool;
+
+        (self.tima, overflow) = self.tima.overflowing_add(1);
+
+        if overflow {
+            self.tima = self.tma;
+
+            return true;
+        }
+        return false;
+    }
+}
+
 pub struct MemoryBus {
     memory: Memory,
     pub joypad: Keys,
     serial: u8,
     serial_control: u8,
+    pub clock: Clock,
     pub gpu: GPU,
     pub dma: u8,
     pub interrupt_enable: Interrupts,
@@ -74,6 +209,7 @@ impl MemoryBus {
             serial_control: 0,
             interrupt_enable: Interrupts::new(),
             interrupt_flag: Interrupts::new(),
+            clock: Clock::new(),
         }
     }
 
@@ -106,7 +242,13 @@ impl MemoryBus {
             0xFF00 => self.joypad.read_byte(),
             0xFF01 => self.serial,
             0xFF02 => self.serial_control,
-            0xFF03..=0xFF0E => { 0 /* ??? */ },
+            0xFF03 => { 0 /* ??? */ },
+            // TODO fix types?
+            0xFF04 => { self.clock.div },
+            0xFF05 => { self.clock.tima },
+            0xFF06 => { self.clock.tma },
+            0xFF07 => { self.clock.tac.into() },
+            0xFF08..=0xFF0E => { 0 /* ??? */ },
             0xFF0F => { self.interrupt_flag.into() },
             0xFF10..=0xFF26 => { 0 /* TODO: audio */ },
             0xFF27..=0xFF2F => { 0xFF /* TODO: audio */ },
@@ -143,7 +285,12 @@ impl MemoryBus {
                 print!("{}", self.serial as char);
                 self.serial_control = 0;
             },
-            0xFF03..=0xFF0E => { /* ??? */ },
+            0xFF03 => { /* ??? */ },
+            0xFF04 => { self.clock.div = 0; },
+            0xFF05 => { self.clock.tima = val; },
+            0xFF06 => { self.clock.tma = val; },
+            0xFF07 => { self.clock.tac = val.into(); },
+            0xFF08..=0xFF0E => { /* ??? */ },
             0xFF0F => { self.interrupt_flag = val.into() },
             0xFF10..=0xFF26 => { /* TODO: audio */ },
             0xFF27..=0xFF2F => { },

@@ -2926,6 +2926,9 @@ impl CPU {
         let mut cycles = self.execute() as u32;
         let mut cycles_t = cycles as u32 * 4;
 
+        self.clock.m += cycles as u32;
+        self.clock.t += (cycles as u32) * 4;
+
         let gpu_interrupts = self.memory_bus.gpu.step(cycles_t.into());
 
         let (vblank, lcd_stat) = match gpu_interrupts {
@@ -2941,6 +2944,14 @@ impl CPU {
 
         if lcd_stat {
             self.memory_bus.interrupt_flag.lcd_stat = true;
+        }
+
+        let clock_interrupt = self.memory_bus.clock.inc(cycles);
+
+        cycles = 0;
+
+        if clock_interrupt {
+            self.memory_bus.interrupt_flag.timer = true;
         }
 
         if self.has_interrupt() {
@@ -2985,6 +2996,8 @@ impl CPU {
             cycles += 4;
             cycles_t += 16;
         }
+
+        _ = self.memory_bus.clock.inc(cycles);
 
         self.clock.m += cycles as u32;
         self.clock.t += (cycles as u32) * 4;
