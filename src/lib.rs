@@ -62,7 +62,7 @@ impl minifb::InputCallback for KeysCallback {
 impl Emulator {
     pub fn new(config: Config) -> Emulator {
         let mut window_options = WindowOptions::default();
-        window_options.scale = Scale::X4;
+        window_options.scale = Scale::X8;
 
         Emulator {
             cpu: CPU::new(config.rom_path, config.debug),
