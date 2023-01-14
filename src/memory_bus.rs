@@ -213,8 +213,8 @@ impl MemoryBus {
         }
     }
 
-    pub fn read_rom(&mut self, f: fs::File) -> io::Result<()> {
-        self.memory.read_rom(f)
+    pub fn read_rom(&mut self, rom_path: &str) -> io::Result<()> {
+        self.memory.read_rom(rom_path)
     }
 
     pub fn read_boot_rom(&mut self, f: fs::File) -> io::Result<()> {

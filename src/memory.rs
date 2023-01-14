@@ -3,8 +3,7 @@ use std::io::Read;
 
 pub struct Memory {
     pub boot_rom: [u8; 0x100],
-    pub rom_0: [u8; 0x3FFF+1],
-    pub rom_n: [u8; 0x3FFF+1],
+    pub rom: Vec<u8>,
     ext_ram: [u8; 0x1FFF+1],
     wram_0: [u8; 0xFFF+1],
     wram_n: [u8; 0xFFF+1],
@@ -16,8 +15,7 @@ impl Memory {
     pub fn new() -> Memory {
         Memory {
             boot_rom: [0; 0x100],
-            rom_0: [0; 0x3FFF+1],
-            rom_n: [0; 0x3FFF+1],
+            rom: Vec::new(),
             ext_ram: [0; 0x1FFF+1],
             wram_0: [0; 0xFFF+1],
             wram_n: [0; 0xFFF+1],
@@ -28,9 +26,11 @@ impl Memory {
 
     pub fn read_byte(&self, address: u16) -> u8 {
         match address {
-            0..=0xff => { if self.expose_boot_rom { self.boot_rom[address as usize] } else { self.rom_0[address as usize] } },
-            0x100..=0x3FFF => self.rom_0[address as usize],
-            0x4000..=0x7FFF => self.rom_n[address as usize - 0x4000],
+            0..=0xff => { if self.expose_boot_rom { self.boot_rom[address as usize] } else { self.rom[address as usize] } },
+            0x100..=0x3FFF => self.rom[address as usize],
+            0x4000..=0x7FFF => {
+                self.rom[address as usize]
+            }
             0xA000..=0xBFFF => self.ext_ram[address as usize - 0xA000],
             0xC000..=0xCFFF => self.wram_0[address as usize - 0xC000],
             0xD000..=0xDFFF => self.wram_n[address as usize - 0xD000],
@@ -50,9 +50,8 @@ impl Memory {
         }
     }
 
-    pub fn read_rom(&mut self, mut f: fs::File) -> io::Result<()> {
-        f.read_exact(&mut self.rom_0)?;
-        f.read_exact(&mut self.rom_n)?;
+    pub fn read_rom(&mut self, rom_path: &str) -> io::Result<()> {
+        self.rom = fs::read(rom_path).expect("can't read ROM");
 
         Ok(())
     }
