@@ -863,8 +863,19 @@ impl CPU {
                         }
 
                         match source {
-                            LDSource::D8 => {cycles = 2; self.reg.pc += 2},
-                            _ => {cycles = 1; self.reg.pc += 1}
+                            LDSource::D8 => {
+                                match target {
+                                    LDTarget::HLIndirect => {cycles = 3; self.reg.pc +=2},
+                                    _ => { cycles = 2; self.reg.pc += 2 },
+                                }
+                            },
+                            LDSource::HLIndirect => {cycles = 2; self.reg.pc += 1},
+                            _ => {
+                                match target {
+                                    LDTarget::HLIndirect => {cycles = 2; self.reg.pc +=1},
+                                    _ => { cycles = 1; self.reg.pc += 1 },
+                                }
+                            }
                         }
                     },
                     LDType::Word(ld_word_target) => {
@@ -1512,37 +1523,37 @@ impl CPU {
                     JCondition::NZ => {
                         if !self.reg.get_flag(Flag::Z) {
                             self.reg.pc = jp_address;
-                            cycles = 4;
+                            cycles = 3;
                         } else {
                             self.reg.pc = next_instruction;
-                            cycles = 3;
+                            cycles = 2;
                         }
                     },
                     JCondition::NC => {
                         if !self.reg.get_flag(Flag::C) {
                             self.reg.pc = jp_address;
-                            cycles = 4;
+                            cycles = 3;
                         } else {
                             self.reg.pc = next_instruction;
-                            cycles = 3;
+                            cycles = 2;
                         }
                     },
                     JCondition::Z => {
                         if self.reg.get_flag(Flag::Z) {
                             self.reg.pc = jp_address;
-                            cycles = 4;
+                            cycles = 3;
                         } else {
                             self.reg.pc = next_instruction;
-                            cycles = 3;
+                            cycles = 2;
                         }
                     },
                     JCondition::C => {
                         if self.reg.get_flag(Flag::C) {
                             self.reg.pc = jp_address;
-                            cycles = 4;
+                            cycles = 3;
                         } else {
                             self.reg.pc = next_instruction;
-                            cycles = 3;
+                            cycles = 2;
                         }
                     },
                 }
@@ -2731,7 +2742,7 @@ impl CPU {
                         match operand {
                             PrefixOperand::HLIndirect => {
                                 self.memory_bus.write_byte(hl_address, hl_byte);
-                                cycles = 4;
+                                cycles = 3;
                                 self.reg.pc += 1;
                             },
                             _ => { cycles = 2; self.reg.pc += 1; },
