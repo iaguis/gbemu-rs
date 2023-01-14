@@ -1804,8 +1804,8 @@ impl CPU {
             },
 
             Opcode::HALT => {
-                // TODO handle interrupt state
                 self.is_halted = true;
+                self.reg.pc += 1;
             },
 
             Opcode::PUSH(target) => {
