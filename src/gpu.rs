@@ -492,7 +492,7 @@ impl GPU {
 
         let mut tile = self.video_ram[(visible_offset + line_offset) as usize] as i16;
 
-        if !self.lcdc.bg_window_addressing_mode && tile < 0 {
+        if !self.lcdc.bg_window_addressing_mode && tile < 128 {
             tile += 256;
         }
 
@@ -510,7 +510,7 @@ impl GPU {
 
                 tile = self.video_ram[(visible_offset + line_offset) as usize] as i16;
 
-                if !self.lcdc.bg_window_addressing_mode && tile < 0 {
+                if !self.lcdc.bg_window_addressing_mode && tile < 128 {
                     tile += 256;
                 }
             }
