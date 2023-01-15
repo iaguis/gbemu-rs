@@ -483,7 +483,7 @@ impl GPU {
         let mut pixel = [0; 160];
 
         let visible_offset = base_address + (tile_map_y * 32);
-        let mut line_offset = (self.scx as u16) >> 3;
+        let mut line_offset = scx >> 3;
 
         let mut x = scx & 7;
         let y = (ly + scy) & 7;
