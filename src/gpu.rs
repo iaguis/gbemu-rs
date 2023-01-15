@@ -554,7 +554,7 @@ impl GPU {
 
                         if ((obj.x + x) >= 0)
                             && ((obj.x + x) < 160)
-                            && (obj.attributes.bg_win_over_obj || !pixel[(obj.x + x) as usize] != 0) {
+                            && (!obj.attributes.bg_win_over_obj || pixel[(obj.x + x) as usize] == 0) {
                             self.canvas_buffer[canvas_offset as usize] = color.to_rgb();
                             canvas_offset += 1;
                         }
