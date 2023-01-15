@@ -10,7 +10,6 @@ pub struct CPU {
     pub reg: Registers,
     pub memory_bus: MemoryBus,
     pub counter: i32,
-    pub tmp_buffer: Vec<u8>,
     pub breakpoints: Vec<u16>,
     pub clock: Clock,
 
@@ -760,8 +759,6 @@ impl CPU {
             reg: Registers::new(),
             counter: 20,
             memory_bus: MemoryBus::new(),
-            // TODO remove
-            tmp_buffer: vec![1; 100],
             breakpoints: vec![],
             clock: Clock {
                 m: 0,
@@ -2892,7 +2889,6 @@ impl CPU {
         cycles
     }
 
-    // TODO implement
     pub fn pixel_buffer(&self) -> std::slice::Iter<'_, u32> {
         self.memory_bus.gpu.canvas_buffer.iter()
     }
