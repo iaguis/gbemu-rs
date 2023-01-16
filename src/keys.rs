@@ -25,40 +25,40 @@ impl Keys {
         self.column = val & 0x30;
     }
 
-    pub fn key_down(&mut self, k: &minifb::Key) {
+    pub fn key_down(&mut self, k: &winit::event::VirtualKeyCode) {
         match k {
-            minifb::Key::Up => self.rows[1] &= 0xB,
-            minifb::Key::Down => self.rows[1] &= 0x7,
-            minifb::Key::Left => self.rows[1] &= 0xD,
-            minifb::Key::Right => self.rows[1] &= 0xE,
+            winit::event::VirtualKeyCode::Up => self.rows[1] &= 0xB,
+            winit::event::VirtualKeyCode::Down => self.rows[1] &= 0x7,
+            winit::event::VirtualKeyCode::Left => self.rows[1] &= 0xD,
+            winit::event::VirtualKeyCode::Right => self.rows[1] &= 0xE,
             // B
-            minifb::Key::A => self.rows[0] &= 0xD,
+            winit::event::VirtualKeyCode::A => self.rows[0] &= 0xD,
             // A
-            minifb::Key::S => {
+            winit::event::VirtualKeyCode::S => {
                 self.rows[0] &= 0xE;
             },
             // Start
-            minifb::Key::G => self.rows[0] &= 0x7,
+            winit::event::VirtualKeyCode::G => self.rows[0] &= 0x7,
             // Select
-            minifb::Key::H => self.rows[0] &= 0xB,
+            winit::event::VirtualKeyCode::H => self.rows[0] &= 0xB,
             _ => {},
         }
     }
 
-    pub fn key_up(&mut self, k: &minifb::Key) {
+    pub fn key_up(&mut self, k: &winit::event::VirtualKeyCode) {
         match k {
-            minifb::Key::Up => self.rows[1] |= 0x4,
-            minifb::Key::Down => self.rows[1] |= 0x8,
-            minifb::Key::Left => self.rows[1] |= 0x2,
-            minifb::Key::Right => self.rows[1] |= 0x1,
+            winit::event::VirtualKeyCode::Up => self.rows[1] |= 0x4,
+            winit::event::VirtualKeyCode::Down => self.rows[1] |= 0x8,
+            winit::event::VirtualKeyCode::Left => self.rows[1] |= 0x2,
+            winit::event::VirtualKeyCode::Right => self.rows[1] |= 0x1,
             // B
-            minifb::Key::A => self.rows[0] |= 0x2,
+            winit::event::VirtualKeyCode::A => self.rows[0] |= 0x2,
             // A
-            minifb::Key::S => self.rows[0] |= 0x1,
+            winit::event::VirtualKeyCode::S => self.rows[0] |= 0x1,
             // Start
-            minifb::Key::G => self.rows[0] |= 0x8,
+            winit::event::VirtualKeyCode::G => self.rows[0] |= 0x8,
             // Select
-            minifb::Key::H => self.rows[0] |= 0x4,
+            winit::event::VirtualKeyCode::H => self.rows[0] |= 0x4,
             _ => {},
         }
     }

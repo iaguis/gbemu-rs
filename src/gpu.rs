@@ -56,7 +56,7 @@ pub struct GPU {
     pub video_ram: [u8; VIDEO_RAM_SIZE + 1],
     pub oam: [u8; OAM_SIZE + 1],
     pub obj_set: [Obj; 40],
-    pub canvas_buffer: [u32; VIEWPORT_PIXELS + 1],
+    pub canvas_buffer: [u32; VIEWPORT_PIXELS],
 
     pub mode_clock: u32,
 
@@ -297,7 +297,7 @@ impl GPU {
             obj_set: [Obj::new(); 40],
             video_ram: [0; VIDEO_RAM_SIZE+1],
             oam: [0; OAM_SIZE+1],
-            canvas_buffer: [0; VIEWPORT_PIXELS+1],
+            canvas_buffer: [0; VIEWPORT_PIXELS],
 
             mode_clock: 0,
 

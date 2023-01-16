@@ -2889,8 +2889,8 @@ impl CPU {
         cycles
     }
 
-    pub fn pixel_buffer(&self) -> std::slice::Iter<'_, u32> {
-        self.memory_bus.gpu.canvas_buffer.iter()
+    pub fn pixel_buffer(&self) -> Vec<u32> {
+        self.memory_bus.gpu.canvas_buffer.to_vec()
     }
 
     pub fn has_interrupt(&self) -> bool {
