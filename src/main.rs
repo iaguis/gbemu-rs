@@ -64,7 +64,7 @@ fn main() {
             } => match event {
                 winit::event::WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                 winit::event::WindowEvent::KeyboardInput {
-                    device_id, input: kin, is_synthetic: _
+                    device_id: _, input: kin, is_synthetic: _
                 } => {
                     match kin.virtual_keycode {
                         Some(k) => {
