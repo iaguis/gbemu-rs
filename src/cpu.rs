@@ -818,7 +818,6 @@ impl CPU {
         Ok(prefixed_opcode)
     }
 
-    // TODO double-check cycles
     fn execute(&mut self) -> u8 {
         if self.is_halted {
             return 1;

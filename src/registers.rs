@@ -21,7 +21,6 @@ pub enum Flag {
 
 impl Registers {
     pub fn new() -> Registers {
-        // https://raw.githubusercontent.com/AntonioND/giibiiadvance/master/docs/TCAGBD.pdf page 10
         Registers {
             a: 0,
             b: 0,

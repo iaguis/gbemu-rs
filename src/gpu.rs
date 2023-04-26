@@ -29,10 +29,6 @@ pub struct ObjAttributes {
     y_flip: bool,
     x_flip: bool,
     palette: bool,
-
-    // GBC fields
-    // tile_vram_bank: bool,
-    // palette_number: 2*bool,
 }
 
 impl Obj {
