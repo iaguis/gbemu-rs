@@ -243,7 +243,6 @@ impl MemoryBus {
             0xFF01 => self.serial,
             0xFF02 => self.serial_control,
             0xFF03 => { 0 /* ??? */ },
-            // TODO fix types?
             0xFF04 => { self.clock.div },
             0xFF05 => { self.clock.tima },
             0xFF06 => { self.clock.tma },

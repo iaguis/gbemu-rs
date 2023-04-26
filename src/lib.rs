@@ -17,7 +17,6 @@ mod debug;
 use cpu::CPU;
 
 const NUMBER_OF_PIXELS: usize = 160*144 + 1;
-// TODO check
 
 pub struct Emulator {
     cpu: CPU,
