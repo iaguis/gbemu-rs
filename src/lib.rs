@@ -64,7 +64,7 @@ impl Emulator {
         window_options.scale = Scale::X8;
 
         Emulator {
-            cpu: CPU::new(config.rom_path, config.debug),
+            cpu: CPU::new(config.rom_path, config.boot_rom_path, config.debug),
             window: Window::new(
                 "gbemu-rs",
                 160,
@@ -136,6 +136,7 @@ impl Emulator {
 
 pub struct Config {
     pub rom_path: String,
+    pub boot_rom_path: Option<String>,
     pub debug: bool,
 }
 
@@ -149,10 +150,13 @@ impl Config {
             None => return Err("missing rom path"),
         };
 
+        let boot_rom_path = args.next();
+
         let debug = env::var("GBEMU_RS_DEBUG").is_ok();
 
         Ok(Config {
             rom_path,
+            boot_rom_path,
             debug,
         })
     }

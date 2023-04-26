@@ -754,7 +754,7 @@ impl TryFrom<u8> for PrefixedOpcode {
 }
 
 impl CPU {
-    pub fn new(rom_path: String, debug: bool) -> CPU {
+    pub fn new(rom_path: String, boot_rom_path: Option<String>, debug: bool) -> CPU {
         let mut cpu = CPU {
             reg: Registers::new(),
             counter: 20,
@@ -775,10 +775,16 @@ impl CPU {
 
         // TODO error handling
 
-        // FIXME pass this from main
-        let boot_rom_path = "/home/iaguis/programming/gbemu-rs/DMG_ROM.bin";
-        let boot_rom_f = File::open(boot_rom_path).expect("can't open boot ROM");
-        cpu.memory_bus.read_boot_rom(boot_rom_f).expect("can't read ROM");
+        match boot_rom_path {
+            Some(path) => {
+                let f = File::open(path).expect("can't open boot ROM");
+                cpu.memory_bus.read_boot_rom(f).expect("can't read boot ROM");
+                // we're passing a boot ROM so let's boot from it
+                cpu.memory_bus.memory.expose_boot_rom = true;
+                cpu.reg.pc = 0;
+            },
+            None => {}
+        };
         cpu.memory_bus.read_rom(&rom_path).expect("can't read ROM");
 
         cpu

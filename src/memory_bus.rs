@@ -139,7 +139,7 @@ impl Clock {
 }
 
 pub struct MemoryBus {
-    memory: Memory,
+    pub memory: Memory,
     pub joypad: Keys,
     serial: u8,
     serial_control: u8,
