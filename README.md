@@ -4,6 +4,8 @@ gbemu-rs is a toy Game Boy emulator written in Rust with the purpose of
 learning about writing emulators and Rust at the same time. It's pretty
 rudimentary but it can run (at least) Tetris and Super Mario Land.
 
+[gbemu-rs.webm](https://user-images.githubusercontent.com/507354/234896287-3c652001-5f1a-4fe6-83fd-2e62346e84a9.webm)
+
 ## Getting started
 
 1. Clone the repo
